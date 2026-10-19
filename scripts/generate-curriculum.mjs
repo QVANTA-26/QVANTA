@@ -245,17 +245,21 @@ function hasClass(node, className) {
   return (node.attributes.class ?? '').split(/\s+/u).includes(className);
 }
 
-function textContent(node, preserveWhitespace = false) {
+function rawTextContent(node) {
   let value = '';
   for (const child of node.children) {
     if (child instanceof HtmlNode) {
-      value += child.tagName === 'br' ? '\n' : textContent(child, true);
+      value += child.tagName === 'br' ? '\n' : rawTextContent(child);
     } else {
       value += child;
     }
   }
 
-  value = decodeHtmlEntities(value).replace(/\r\n?/gu, '\n');
+  return value;
+}
+
+function textContent(node, preserveWhitespace = false) {
+  const value = decodeHtmlEntities(rawTextContent(node)).replace(/\r\n?/gu, '\n');
   return preserveWhitespace ? value : value.replace(/\s+/gu, ' ').trim();
 }
 
