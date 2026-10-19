@@ -53,6 +53,38 @@ const IconCircuit: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
+const IconLearn: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" />
+    <path d="M4 5.5v16M8 7h8M8 11h7" />
+  </svg>
+);
+
+const IconCurriculum: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" />
+    <path d="M4 5.5v16M8 7h8M8 11h7M8 15h5" />
+  </svg>
+);
+
 const IconTutor: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -107,6 +139,16 @@ const navItems: NavItem[] = [
     to: '/dashboard',
     label: 'Dashboard',
     icon: <IconDashboard className="h-5 w-5" />
+  },
+  {
+    to: '/learn',
+    label: 'Learn',
+    icon: <IconLearn className="h-5 w-5" />
+  },
+  {
+    to: '/curriculum',
+    label: 'Curriculum',
+    icon: <IconCurriculum className="h-5 w-5" />
   },
   {
     to: '/circuit/new',
@@ -186,6 +228,8 @@ const Sidebar: React.FC<SidebarProps> = ({ className, onNavigate }) => {
             const isActive =
               item.to === '/circuit/new'
                 ? location.pathname.startsWith('/circuit')
+                : item.to === '/curriculum'
+                ? location.pathname.startsWith('/curriculum')
                 : location.pathname === item.to;
 
             return (
