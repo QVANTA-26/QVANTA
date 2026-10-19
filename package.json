@@ -11,6 +11,9 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",
+    "test": "node scripts/verify-repo.mjs && node scripts/generate-curriculum.mjs --verify",
+    "curriculum:generate": "node scripts/generate-curriculum.mjs --source",
+    "curriculum:verify": "node scripts/generate-curriculum.mjs --verify",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
