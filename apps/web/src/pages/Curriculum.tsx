@@ -1,17 +1,17 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input } from '@qvanta/ui';
+import { useCurriculumProgress } from '@/hooks/useCurriculumProgress';
 import CurriculumModuleDetail from '@/components/curriculum/CurriculumModuleDetail';
 import {
   buildTutorHandoff,
   CURRICULUM,
-  CURRICULUM_PROGRESS_KEY,
   getModuleProgress,
   moduleContainsSearchText,
-  readCurriculumProgress,
   type CurriculumModule,
   type CurriculumProgress,
 } from '@/components/curriculum/curriculum';
+import { saveCurriculumCircuitHandoff } from '@/lib/curriculum-circuit';
 
 const TUTOR_PROMPT_KEY = 'qvanta.tutor.initialPrompt';
 const TUTOR_MODULE_KEY = 'qvanta.tutor.initialModule';
@@ -48,14 +48,25 @@ const IconCurriculum: React.FC<{ className?: string }> = ({ className }) => (
 
 const CurriculumPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = React.useState('');
   const [partFilter, setPartFilter] = React.useState<string>(ALL_FILTER);
   const [levelFilter, setLevelFilter] = React.useState<string>(ALL_FILTER);
-  const [progress, setProgress] = React.useState<Record<string, CurriculumProgress>>(
-    readCurriculumProgress
-  );
+  const {
+    progress,
+    updateProgress: updateCurriculumProgress,
+    totalXp,
+    averageMastery,
+    source: progressSource,
+  } = useCurriculumProgress();
+  const requestedModuleId = React.useMemo(() => {
+    const value = Number(searchParams.get('module'));
+    return Number.isInteger(value) && value >= 0 && CURRICULUM.modules.some((module) => module.id === value)
+      ? value
+      : null;
+  }, [searchParams]);
   const [selectedModuleId, setSelectedModuleId] = React.useState<number | null>(
-    () => CURRICULUM.modules[0]?.id ?? null
+    () => requestedModuleId ?? CURRICULUM.modules[0]?.id ?? null
   );
   const filterKey = `${search}\u0000${partFilter}\u0000${levelFilter}`;
   const previousFilterKey = React.useRef(filterKey);
@@ -82,22 +93,21 @@ const CurriculumPage: React.FC = () => {
     : -1;
 
   React.useEffect(() => {
-    try {
-      window.localStorage.setItem(CURRICULUM_PROGRESS_KEY, JSON.stringify(progress));
-    } catch {
-      // Local progress is best-effort when browser storage is unavailable.
-    }
-  }, [progress]);
-
-  React.useEffect(() => {
     if (previousFilterKey.current === filterKey) return;
     previousFilterKey.current = filterKey;
     setSelectedModuleId(filteredModules[0]?.id ?? null);
   }, [filterKey, filteredModules]);
 
   const updateProgress = React.useCallback((moduleId: number, value: CurriculumProgress) => {
-    setProgress((current) => ({ ...current, [String(moduleId)]: value }));
-  }, []);
+    updateCurriculumProgress(moduleId, value);
+  }, [updateCurriculumProgress]);
+
+  React.useEffect(() => {
+    if (requestedModuleId === null) return;
+    if (CURRICULUM.modules.some((module) => module.id === requestedModuleId)) {
+      setSelectedModuleId(requestedModuleId);
+    }
+  }, [requestedModuleId]);
 
   const selectModule = React.useCallback(
     (module: CurriculumModule) => {
@@ -118,7 +128,7 @@ const CurriculumPage: React.FC = () => {
   const moveToSequenceModule = (offset: -1 | 1) => {
     if (!selectedModule || selectedSequenceIndex < 0) return;
     const nextModule = CURRICULUM.modules[selectedSequenceIndex + offset];
-    if (nextModule) setSelectedModuleId(nextModule.id);
+    if (nextModule) selectModule(nextModule);
   };
 
   const handoffToTutor = () => {
@@ -140,6 +150,12 @@ const CurriculumPage: React.FC = () => {
       // Tutor still opens if sessionStorage is unavailable.
     }
     navigate('/tutor');
+  };
+
+  const openModuleCircuit = () => {
+    if (!selectedModule) return;
+    saveCurriculumCircuitHandoff(selectedModule);
+    navigate(`/circuit/new?module=${selectedModule.id}`);
   };
 
   const completedCount = React.useMemo(
@@ -164,7 +180,7 @@ const CurriculumPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
           <div className="rounded-lg border border-bg-800 bg-bg-900 px-3 py-2 text-center">
             <div className="text-lg font-semibold text-text-100">{CURRICULUM.parts.length}</div>
             <div className="text-[11px] uppercase tracking-wide text-text-500">Parts</div>
@@ -177,13 +193,21 @@ const CurriculumPage: React.FC = () => {
             <div className="text-lg font-semibold text-emerald-300">{completedCount}</div>
             <div className="text-[11px] uppercase tracking-wide text-text-500">Completed</div>
           </div>
+          <div className="rounded-lg border border-bg-800 bg-bg-900 px-3 py-2 text-center">
+            <div className="text-lg font-semibold text-cyan-200">{averageMastery}%</div>
+            <div className="text-[11px] uppercase tracking-wide text-text-500">Mastery</div>
+          </div>
+          <div className="rounded-lg border border-bg-800 bg-bg-900 px-3 py-2 text-center">
+            <div className="text-lg font-semibold text-amber-200">{totalXp.toLocaleString()}</div>
+            <div className="text-[11px] uppercase tracking-wide text-text-500">XP</div>
+          </div>
         </div>
       </div>
 
       <details className="rounded-lg border border-bg-800 bg-bg-900/60 px-4 py-3 text-sm text-text-300">
         <summary className="cursor-pointer font-medium text-text-100">Source-backed curriculum</summary>
         <p className="mt-2 leading-6 text-text-400">
-          This page renders the checked-in source directly: <code className="text-xs text-cyan-300">{CURRICULUM.source.filename}</code> · {CURRICULUM.source.title}. The source declares {CURRICULUM.source.claimedCounts.parts} parts and {CURRICULUM.source.claimedCounts.modules} modules.
+          This page renders the checked-in source directly: <code className="text-xs text-cyan-300">{CURRICULUM.source.filename}</code> · {CURRICULUM.source.title}. The source declares {CURRICULUM.source.claimedCounts.parts} parts and {CURRICULUM.source.claimedCounts.modules} modules. Progress is {progressSource === 'remote' ? 'synced to your account' : 'saved on this device'}.
         </p>
       </details>
 
@@ -312,6 +336,7 @@ const CurriculumPage: React.FC = () => {
               onPrevious={() => moveToSequenceModule(-1)}
               onNext={() => moveToSequenceModule(1)}
               onTutor={handoffToTutor}
+               onCircuit={openModuleCircuit}
               hasPrevious={selectedSequenceIndex > 0}
               hasNext={selectedSequenceIndex < CURRICULUM.modules.length - 1}
             />

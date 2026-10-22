@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken, verifyRefreshToken } from '../../lib/jwt';
+import { verifyAccessToken } from '../../lib/jwt';
 import { AppError } from '../../lib/errors';
 import type { JwtPayload } from '../../lib/jwt';
 import type { UserRole } from '@qvanta/types';
@@ -21,20 +21,14 @@ export function JwtAuthGuard(
   _res: Response,
   next: NextFunction
 ): void {
-  let token = extractBearerToken(req);
-  let fromCookie = false;
-
-  if (!token && req.cookies?.refreshToken) {
-    token = req.cookies.refreshToken as string;
-    fromCookie = true;
-  }
+  const token = extractBearerToken(req);
 
   if (!token) {
     return next(AppError.unauthorized('No authentication token provided'));
   }
 
   try {
-    const payload = fromCookie ? verifyRefreshToken(token) : verifyAccessToken(token);
+    const payload = verifyAccessToken(token);
     (req as AuthRequest).user = payload;
     next();
   } catch (err) {

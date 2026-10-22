@@ -1,6 +1,7 @@
 import curriculumJson from '@/data/curriculum.json';
+import type { LearningProgressStatus } from '@/lib/learning-progress';
 
-export type CurriculumProgress = 'not_started' | 'in_progress' | 'completed';
+export type CurriculumProgress = LearningProgressStatus;
 
 export interface CurriculumSource {
   filename: string;
@@ -80,32 +81,7 @@ export interface CurriculumTutorHandoff {
 }
 
 export const CURRICULUM = curriculumJson as unknown as CurriculumData;
-export const CURRICULUM_PROGRESS_KEY = 'qvanta.curriculum.progress';
-
-const isProgressValue = (value: unknown): value is CurriculumProgress =>
-  value === 'not_started' || value === 'in_progress' || value === 'completed';
-
-export const readCurriculumProgress = (): Record<string, CurriculumProgress> => {
-  if (typeof window === 'undefined') return {};
-
-  try {
-    const raw = window.localStorage.getItem(CURRICULUM_PROGRESS_KEY);
-    if (!raw) return {};
-
-    const parsed: unknown = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
-
-    return Object.entries(parsed).reduce<Record<string, CurriculumProgress>>(
-      (result, [moduleId, value]) => {
-        if (isProgressValue(value)) result[moduleId] = value;
-        return result;
-      },
-      {}
-    );
-  } catch {
-    return {};
-  }
-};
+export { CURRICULUM_PROGRESS_KEY, readCurriculumProgress } from '@/lib/learning-progress';
 
 export const getModuleProgress = (
   module: CurriculumModule,

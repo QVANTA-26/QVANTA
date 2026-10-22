@@ -3,12 +3,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth';
 import { apiClient } from '@/lib/api-client';
 import type { User } from '@qvanta/types';
+import { getSafeAuthRedirect } from '@/lib/auth-navigation';
 
 const AuthGoogleCallbackPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
-  const setUser = useAuthStore((s) => s.setUser);
   const [status, setStatus] = React.useState<'loading' | 'done' | 'error'>('loading');
   const [message, setMessage] = React.useState<string>('Completing sign-in with Google...');
 
@@ -16,16 +16,33 @@ const AuthGoogleCallbackPage: React.FC = () => {
     let cancelled = false;
 
     const finish = async () => {
-      const accessToken = searchParams.get('accessToken');
-      const refreshToken = searchParams.get('refreshToken');
-      const userId = searchParams.get('userId');
-      const error = searchParams.get('error');
+       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+       const accessToken = hashParams.get('accessToken') ?? searchParams.get('accessToken');
+       // Legacy query-string support is intentionally read-only during the
+       // migration. New OAuth redirects use an httpOnly cookie plus a hash.
+       const legacyRefreshToken = searchParams.get('refreshToken');
+       const error = searchParams.get('error');
+       if (window.location.hash || searchParams.has('accessToken') || searchParams.has('refreshToken')) {
+         window.history.replaceState(null, document.title, `${window.location.pathname}${searchParams.has('error') ? window.location.search : ''}`);
+       }
+      let storedRedirect: string | null = null;
+      try {
+        storedRedirect = sessionStorage.getItem('qvanta_auth_redirect');
+        sessionStorage.removeItem('qvanta_auth_redirect');
+      } catch {
+        // Ignore storage restrictions and use the default dashboard destination.
+      }
+      const redirectPath = getSafeAuthRedirect(searchParams.get('next') ?? storedRedirect);
+      const loginErrorPath =
+        redirectPath === '/dashboard'
+          ? '/login?oauth=error'
+          : `/login?oauth=error&next=${encodeURIComponent(redirectPath)}`;
 
       if (error) {
         if (!cancelled) {
           setStatus('error');
           setMessage(error);
-          setTimeout(() => navigate('/login?oauth=error', { replace: true }), 1500);
+          setTimeout(() => navigate(loginErrorPath, { replace: true }), 1500);
         }
         return;
       }
@@ -34,7 +51,7 @@ const AuthGoogleCallbackPage: React.FC = () => {
         if (!cancelled) {
           setStatus('error');
           setMessage('Missing access token');
-          setTimeout(() => navigate('/login?oauth=error', { replace: true }), 1500);
+          setTimeout(() => navigate(loginErrorPath, { replace: true }), 1500);
         }
         return;
       }
@@ -46,17 +63,20 @@ const AuthGoogleCallbackPage: React.FC = () => {
         const user = res.data;
 
         if (!cancelled) {
-          setAuth(user, { accessToken, refreshToken: refreshToken ?? undefined });
-          setUser(user);
-          setStatus('done');
-          setMessage('Signed in. Redirecting to dashboard...');
-          setTimeout(() => navigate('/dashboard', { replace: true }), 600);
+            setAuth(user, { accessToken, refreshToken: legacyRefreshToken ?? undefined });
+           setStatus('done');
+           setMessage(
+             redirectPath === '/dashboard'
+               ? 'Signed in. Redirecting to your dashboard...'
+               : 'Signed in. Continuing your learning journey...'
+           );
+           setTimeout(() => navigate(redirectPath, { replace: true }), 600);
         }
       } catch (err: any) {
         if (!cancelled) {
           setStatus('error');
           setMessage(err?.response?.data?.error?.message ?? 'Failed to load user');
-          setTimeout(() => navigate('/login?oauth=error', { replace: true }), 1500);
+          setTimeout(() => navigate(loginErrorPath, { replace: true }), 1500);
         }
       }
     };
@@ -66,7 +86,7 @@ const AuthGoogleCallbackPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [searchParams, navigate, setAuth, setUser]);
+  }, [searchParams, navigate, setAuth]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg-950 px-4 text-text-100">

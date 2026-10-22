@@ -55,7 +55,7 @@ const OrbScene: React.FC<OrbSceneProps> = ({ shellRef }) => {
       new THREE.Line(
         orbitGeom1,
         new THREE.LineBasicMaterial({
-          color: new THREE.Color('#8b6bff'),
+           color: new THREE.Color('#8f102d'),
           transparent: true,
           opacity: 0.55
         })
@@ -71,7 +71,7 @@ const OrbScene: React.FC<OrbSceneProps> = ({ shellRef }) => {
       new THREE.Line(
         orbitGeom2,
         new THREE.LineBasicMaterial({
-          color: new THREE.Color('#34e0ff'),
+           color: new THREE.Color('#e4d5cc'),
           transparent: true,
           opacity: 0.48
         })
@@ -141,9 +141,9 @@ const OrbScene: React.FC<OrbSceneProps> = ({ shellRef }) => {
     stateRef.current = smoothedStateRef.current;
 
     const s = smoothedStateRef.current;
-    const violetW = Math.max(0, 1 - s / 3);
-    const cyanW = Math.max(0, s / 3);
-    const coreColor = new THREE.Color('#8b6bff').lerp(new THREE.Color('#34e0ff'), cyanW / (violetW + cyanW + 1e-6));
+     const violetW = Math.max(0, 1 - s / 3);
+     const cyanW = Math.max(0, s / 3);
+     const coreColor = new THREE.Color('#8f102d').lerp(new THREE.Color('#e4d5cc'), cyanW / (violetW + cyanW + 1e-6));
     const scaleBias = 0.88 + s * 0.08;
 
     if (orbGroupRef.current) {
@@ -182,7 +182,7 @@ const FeatureConnector: React.FC<ConnectorProps> = ({ idx }) => {
   const yPositions = [78, 178, 278, 378];
   const y = yPositions[idx] ?? 178;
   const pathD = `M 0 ${y} C 110 ${y}, 140 ${220}, 220 220`;
-  const color = idx % 2 === 0 ? '#8b6bff' : '#34e0ff';
+   const color = idx % 2 === 0 ? '#8f102d' : '#e4d5cc';
   return (
     <svg
       className="hp-conn-line pointer-events-none absolute inset-y-0 -right-[232px] h-full w-[260px]"

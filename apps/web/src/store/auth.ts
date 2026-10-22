@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { User } from '@qvanta/types';
+import { apiClient } from '@/lib/api-client';
 
 interface AuthTokens {
   accessToken: string;
@@ -19,47 +20,11 @@ const USER_KEY = 'qvanta_user';
 const TOKEN_KEY = 'qvanta_token';
 const REFRESH_KEY = 'qvanta_refresh_token';
 
-const DEV_ACCESS_TOKEN = 'dev-token';
-
 const loadInitialState = (): Partial<AuthState> => {
   try {
     const accessToken = localStorage.getItem(TOKEN_KEY);
     const refreshToken = localStorage.getItem(REFRESH_KEY);
     const userStr = localStorage.getItem(USER_KEY);
-
-    const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-    const hasExistingAuth = !!accessToken;
-
-    if (isLocalhost && !hasExistingAuth) {
-      const mockUser: User = {
-        id: 'dev-local',
-        email: 'dev@qvanta.ai',
-        role: 'admin',
-        tier: 'free',
-        usageMonth: new Date().toISOString().slice(0, 7),
-        usageSims: 0,
-        avatarPreset: 0,
-        createdAt: new Date().toISOString(),
-      };
-      const tokens: AuthTokens = {
-        accessToken: DEV_ACCESS_TOKEN,
-        refreshToken: 'dev-refresh',
-      };
-      try {
-        localStorage.setItem(TOKEN_KEY, tokens.accessToken);
-        if (typeof tokens.refreshToken === 'string' && tokens.refreshToken.length > 0) {
-          localStorage.setItem(REFRESH_KEY, tokens.refreshToken);
-        }
-        localStorage.setItem(USER_KEY, JSON.stringify(mockUser));
-      } catch {
-        /* ignore */
-      }
-      return {
-        user: mockUser,
-        tokens,
-        isAuthenticated: true,
-      };
-    }
 
     if (!accessToken) {
       return { user: null, tokens: null, isAuthenticated: false };
@@ -74,14 +39,14 @@ const loadInitialState = (): Partial<AuthState> => {
     return {
       user,
       tokens,
-      isAuthenticated: !!accessToken
+      isAuthenticated: Boolean(accessToken && user)
     };
   } catch {
     return { user: null, tokens: null, isAuthenticated: false };
   }
 };
 
-export const useAuthStore = create<AuthState>((set, get) => {
+export const useAuthStore = create<AuthState>((set) => {
   const initial = loadInitialState();
 
   return {
@@ -92,14 +57,14 @@ export const useAuthStore = create<AuthState>((set, get) => {
     setAuth: (user: User, tokens: AuthTokens) => {
       try {
         localStorage.setItem(TOKEN_KEY, tokens.accessToken);
-        if (typeof tokens.refreshToken === 'string' && tokens.refreshToken.length > 0) {
-          localStorage.setItem(REFRESH_KEY, tokens.refreshToken);
-        }
+        // Refresh tokens are issued as httpOnly cookies and never need to be
+        // readable by the browser application.
+        localStorage.removeItem(REFRESH_KEY);
         localStorage.setItem(USER_KEY, JSON.stringify(user));
       } catch {
         // ignore persistence errors
       }
-      set({ user, tokens, isAuthenticated: true });
+      set({ user, tokens: { accessToken: tokens.accessToken }, isAuthenticated: true });
     },
 
     setUser: (user: User) => {
@@ -112,6 +77,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
 
     logout: () => {
+      void apiClient.post('/auth/logout').catch(() => undefined);
       try {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(REFRESH_KEY);

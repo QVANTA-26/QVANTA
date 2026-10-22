@@ -58,6 +58,18 @@ export interface SimulationJob {
 
 export type TutorMessageRole = 'user' | 'assistant' | 'system';
 
+export type TutorResponseMode = 'instant' | 'grounded' | 'model' | 'offline';
+
+export interface TutorEvidence {
+  mode: TutorResponseMode;
+  latencyMs: number;
+  sources: string[];
+  circuitTraceSteps: number;
+  warningCount: number;
+  hasPredictionQuestion: boolean;
+  reason: string;
+}
+
 export interface TutorMessage {
   id: string;
   conversationId: string;
@@ -65,6 +77,7 @@ export interface TutorMessage {
   content: string;
   ragContext?: string[];
   circuitContext?: Circuit;
+  tutorEvidence?: TutorEvidence;
   createdAt: string;
 }
 
@@ -79,6 +92,10 @@ export interface SubscriptionTier {
 
 export type LessonProgress = 'not_started' | 'started' | 'completed';
 
+export type CheckpointState = 'not_started' | 'in_progress' | 'passed' | 'failed';
+
+export type LessonCheckpointKind = 'checklist' | 'quiz';
+
 export interface LessonModule {
   id: string;
   title: string;
@@ -89,6 +106,54 @@ export interface LessonModule {
   progress?: LessonProgress;
   embedded?: boolean;
   createdAt: string;
+}
+
+export interface LessonProgressRecord {
+  userId?: string;
+  moduleId: string;
+  status: LessonProgress;
+  lastStep: number;
+  mastery: number;
+  xp: number;
+  checkpointState: CheckpointState;
+  checkpointScore?: number;
+  checkpointAttempts: number;
+  updatedAt: string;
+  createdAt?: string;
+  module?: Pick<LessonModule, 'id' | 'title' | 'slug' | 'order'>;
+}
+
+export type LessonCheckpointQuestionType =
+  | 'checklist'
+  | 'single_choice'
+  | 'multiple_choice'
+  | 'short_text';
+
+export interface LessonCheckpointQuestion {
+  id: string;
+  prompt: string;
+  type: LessonCheckpointQuestionType;
+  options?: string[];
+  points?: number;
+}
+
+export interface LessonCheckpoint {
+  id: string;
+  moduleId: string;
+  title: string;
+  prompt: string;
+  kind: LessonCheckpointKind;
+  questions: LessonCheckpointQuestion[];
+  maxScore: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LessonCheckpointScore {
+  score: number;
+  earnedPoints: number;
+  availablePoints: number;
+  passed: boolean;
 }
 
 export interface Conversation {

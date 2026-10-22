@@ -21,7 +21,7 @@ export interface SimulationResultsProps {
   } | null;
 }
 
-const COLORS = ['#6366f1', '#a855f7', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16'];
+const COLORS = ['#8f102d', '#b76e79', '#d19b83', '#8aa58e', '#d8ad96', '#b94b5a', '#e4d5cc', '#9a7a6d'];
 
 const SimulationResults: React.FC<SimulationResultsProps> = ({ status, error, result }) => {
   if (status === 'idle' && !result) {
@@ -100,36 +100,36 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ status, error, re
       <div className="min-h-[340px] flex-1">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 16, right: 24, left: 0, bottom: 32 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#292122" vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fill: '#64748b', fontSize: 12, fontFamily: 'ui-monospace, monospace' }}
-              axisLine={{ stroke: '#334155' }}
+              tick={{ fill: '#aa9b92', fontSize: 12, fontFamily: 'ui-monospace, monospace' }}
+              axisLine={{ stroke: '#554944' }}
               tickLine={false}
               angle={-18}
               textAnchor="end"
               height={44}
             />
             <YAxis
-              tick={{ fill: '#64748b', fontSize: 12 }}
-              axisLine={{ stroke: '#334155' }}
+              tick={{ fill: '#aa9b92', fontSize: 12 }}
+              axisLine={{ stroke: '#554944' }}
               tickLine={false}
               allowDecimals={false}
             />
             <Tooltip
-              cursor={{ fill: 'rgba(99,102,241,0.06)' }}
+              cursor={{ fill: 'rgba(143,16,45,0.08)' }}
               contentStyle={{
-                background: '#0f172a',
-                border: '1px solid #334155',
+                background: '#1a1517',
+                border: '1px solid #554944',
                 borderRadius: 8,
-                color: '#f1f5f9',
+                color: '#f7f1eb',
                 fontSize: 12
               }}
               formatter={(value: any, _name: any, item: any) => [
                 `${Number(value).toLocaleString()} shots (${item.payload.pct}%)`,
                 'Measurement'
               ]}
-              labelStyle={{ color: '#a5b4fc', fontFamily: 'ui-monospace, monospace' }}
+              labelStyle={{ color: '#e4d5cc', fontFamily: 'ui-monospace, monospace' }}
             />
             <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={56}>
               {data.map((d, i) => (

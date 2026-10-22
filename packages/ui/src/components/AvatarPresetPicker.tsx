@@ -15,22 +15,22 @@ const AVATAR_PRESETS: AvatarPreset[] = [
     id: 0,
     name: "Scholar",
     headShape: "round",
-    color: "#3b82f6",
-    bgColor: "bg-blue-500"
+     color: "#8f102d",
+     bgColor: "bg-primary-500"
   },
   {
     id: 1,
     name: "Engineer",
     headShape: "square",
-    color: "#f97316",
-    bgColor: "bg-orange-500"
+     color: "#d19b83",
+     bgColor: "bg-accent-500"
   },
   {
     id: 2,
     name: "Sage",
     headShape: "oval",
-    color: "#a855f7",
-    bgColor: "bg-purple-500"
+     color: "#b76e79",
+     bgColor: "bg-primary-400"
   }
 ];
 

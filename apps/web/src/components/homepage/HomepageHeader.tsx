@@ -56,8 +56,8 @@ const HomepageHeader: React.FC = () => {
                 size="md"
                 onClick={() => navigate('/register')}
                 style={{
-                  background: 'linear-gradient(135deg,#8b6bff 0%,#633dff 100%)',
-                  boxShadow: '0 6px 24px -8px rgba(139,107,255,0.55)'
+                   background: 'linear-gradient(135deg,#6d001a 0%,#8f102d 100%)',
+                   boxShadow: '0 6px 24px -8px rgba(109,0,26,0.55)'
                 }}
               >
                 Sign up free

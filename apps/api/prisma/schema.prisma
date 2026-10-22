@@ -29,6 +29,18 @@ enum LessonProgress {
   completed
 }
 
+enum CheckpointState {
+  not_started
+  in_progress
+  passed
+  failed
+}
+
+enum CheckpointKind {
+  checklist
+  quiz
+}
+
 model User {
   id               String              @id @default(uuid())
   email            String              @unique
@@ -43,6 +55,7 @@ model User {
   createdAt        DateTime            @default(now())
   conversations   Conversation[]
   progress        UserProgress[]
+  checkpointAttempts LessonCheckpointAttempt[]
   subscriptionEvents SubscriptionEvent[]
   refreshTokens   RefreshToken[]
   circuits        Circuit[]           @relation("UserCircuits")
@@ -79,24 +92,71 @@ model CourseModule {
   title       String
   slug        String         @unique
   mdxContent  String
-  embedding   Unsupported("vector(1536)")?
+  // Keep embeddings portable for local Postgres installations. A future
+  // pgvector migration can change this to a native vector column when vector
+  // search is actually enabled; the current tutor falls back to text search.
+  embedding   Json?
   embedded    Boolean        @default(false)
   order       Int?
   createdAt   DateTime       @default(now())
   progress    UserProgress[]
+  checkpoints LessonCheckpoint[]
 
   @@map("course_modules")
 }
 
 model UserProgress {
-  userId   String
-  moduleId String
-  status   LessonProgress @default(not_started)
-  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  module   CourseModule   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  userId            String
+  moduleId          String
+  status            LessonProgress  @default(not_started)
+  lastStep          Int             @default(0)
+  mastery           Int             @default(0)
+  xp                Int             @default(0)
+  checkpointState   CheckpointState  @default(not_started)
+  checkpointScore   Int?
+  checkpointAttempts Int            @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module            CourseModule    @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   @@id([userId, moduleId])
   @@map("user_progress")
+}
+
+model LessonCheckpoint {
+  id          String                    @id @default(uuid())
+  moduleId    String
+  kind        CheckpointKind            @default(checklist)
+  title       String
+  prompt      String
+  questions   Json
+  maxScore    Int                       @default(100)
+  source      String                    @default("course_module")
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  module      CourseModule              @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  attempts    LessonCheckpointAttempt[]
+
+  @@unique([moduleId, source])
+  @@index([moduleId])
+  @@map("lesson_checkpoints")
+}
+
+model LessonCheckpointAttempt {
+  id           String           @id @default(uuid())
+  userId       String
+  checkpointId String
+  answers      Json
+  score        Int
+  maxScore     Int
+  passed       Boolean
+  createdAt    DateTime         @default(now())
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checkpoint   LessonCheckpoint @relation(fields: [checkpointId], references: [id], onDelete: Cascade)
+
+  @@index([userId, checkpointId])
+  @@map("lesson_checkpoint_attempts")
 }
 
 model Conversation {

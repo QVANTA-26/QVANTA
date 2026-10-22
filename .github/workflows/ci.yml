@@ -6,8 +6,16 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  verify:
+    name: Verify, build, and check the web image
     runs-on: ubuntu-latest
 
     steps:
@@ -17,33 +25,24 @@ jobs:
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
 
-      - name: Setup pnpm 9
-        uses: pnpm/action-setup@v3
-        with:
-          version: '9'
+      - name: Install dependencies from package-lock.json
+        run: npm ci --no-audit --no-fund
 
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      - name: Verify repository foundation
+        run: npm test
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: Generate Prisma client
+        run: npm run prisma:generate
 
-      - name: Run typecheck
-        run: pnpm typecheck
+      - name: Run workspace typecheck
+        run: npm run typecheck
 
-      - name: Run build
-        run: pnpm build
+      - name: Build workspaces
+        run: npm run build
 
-      - name: Install simulator dependencies
-        run: |
-          cd apps/simulator
-          pip install -r requirements.txt
-
-      - name: Simulator healthcheck import
-        run: |
-          cd apps/simulator
-          python -c "import main; print('Simulator import healthy')"
+      - name: Check production web Docker build
+        run: npm run docker:check

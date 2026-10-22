@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../lib/errors';
 import {
@@ -157,6 +157,12 @@ export async function refreshTokens(refreshToken: string): Promise<Tokens> {
   const tokens = await issueTokensForUser(user);
 
   return tokens;
+}
+
+export async function revokeRefreshToken(refreshToken: string): Promise<void> {
+  await prisma.refreshToken.deleteMany({
+    where: { tokenHash: hashToken(refreshToken) },
+  });
 }
 
 export async function findOrCreateGoogleUser(profile: {

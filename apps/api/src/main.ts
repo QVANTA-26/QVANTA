@@ -19,6 +19,7 @@ import { simulationsRouter } from './modules/simulations/simulations.router';
 import { lessonsRouter } from './modules/lessons/lessons.router';
 
 import { seedAdminUser } from './seeders/admin';
+import { seedCurriculumModules } from './seeders/curriculum';
 
 function createApp(): Express {
   const app = express();
@@ -36,7 +37,13 @@ function createApp(): Express {
   app.use(
     cors({
       origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
+        if (
+          !origin ||
+          allowedOrigins.includes(origin) ||
+          origin.startsWith('http://localhost:') ||
+          origin.startsWith('http://127.0.0.1:') ||
+          origin.startsWith('http://[::1]:')
+        ) {
           callback(null, true);
         } else {
           callback(new Error(`Origin ${origin} not allowed by CORS`));
@@ -116,13 +123,22 @@ function createApp(): Express {
 }
 
 async function bootstrap(): Promise<void> {
-  const port = Number(process.env.PORT ?? 3000);
+  const port = Number(process.env.PORT ?? 3001);
   const app = createApp();
 
   try {
     await seedAdminUser();
   } catch (err) {
     logger.warn(`Admin seeding failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
+  if (process.env.SEED_CURRICULUM === '1') {
+    try {
+      const count = await seedCurriculumModules();
+      logger.info(`Curriculum seed complete: ${count} modules available to the learning API`);
+    } catch (err) {
+      logger.warn(`Curriculum seeding failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   app.listen(port, () => {

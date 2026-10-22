@@ -72,38 +72,38 @@ const BlochSphere: React.FC<BlochSphereProps> = ({ position, vector }) => {
     <group position={position}>
       <mesh>
         <sphereGeometry args={[0.95, 32, 16]} />
-        <meshStandardMaterial color="#1e293b" transparent opacity={0.18} />
+         <meshStandardMaterial color="#292122" transparent opacity={0.22} />
       </mesh>
       <mesh>
         <sphereGeometry args={[0.95, 20, 12]} />
-        <meshBasicMaterial color="#334155" wireframe transparent opacity={0.35} />
+         <meshBasicMaterial color="#554944" wireframe transparent opacity={0.35} />
       </mesh>
       <lineSegments>
         <AxisLine points={[new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 0, 1)]} />
-        <lineBasicMaterial color="#334155" />
+         <lineBasicMaterial color="#554944" />
       </lineSegments>
       <lineSegments>
         <AxisLine points={[new THREE.Vector3(-1, 0, 0), new THREE.Vector3(1, 0, 0)]} />
-        <lineBasicMaterial color="#334155" />
+         <lineBasicMaterial color="#554944" />
       </lineSegments>
       <lineSegments>
         <AxisLine points={[new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 1, 0)]} />
-        <lineBasicMaterial color="#334155" />
+         <lineBasicMaterial color="#554944" />
       </lineSegments>
 
       <group position={[0, 0, 0]} quaternion={q}>
         <mesh position={[0, arrowLen * 0.5, 0]}>
           <cylinderGeometry args={[0.025, 0.025, arrowLen, 12]} />
-          <meshBasicMaterial color="#6366f1" />
+           <meshBasicMaterial color="#8f102d" />
         </mesh>
         <mesh position={[0, arrowLen * 1.0, 0]}>
           <coneGeometry args={[0.09, 0.22, 16]} />
-          <meshBasicMaterial color="#a855f7" />
+           <meshBasicMaterial color="#d19b83" />
         </mesh>
       </group>
       <mesh position={tipPosition.toArray() as [number, number, number]}>
         <sphereGeometry args={[0.07, 16, 16]} />
-        <meshBasicMaterial color="#f59e0b" />
+         <meshBasicMaterial color="#e4d5cc" />
       </mesh>
     </group>
   );
@@ -149,7 +149,7 @@ const BlochPanel: React.FC = () => {
       </div>
       <div className="min-h-[360px] flex-1">
         <Canvas camera={{ position: [0, qubits * 0.9 + 1.8, qubits * spacing * 0.8 + 4.5], fov: 45 }}>
-          <color attach="background" args={['#020617']} />
+           <color attach="background" args={['#0c0a0c']} />
           <ambientLight intensity={0.9} />
           <directionalLight position={[4, 6, 5]} intensity={0.55} />
           <group position={[-(qubits - 1) * spacing * 0.5, 0, 0]}>

@@ -7,12 +7,12 @@ const CELL_H = 56;
 const PALETTE_W = 200;
 
 const GATE_FILL: Record<Gate, string> = {
-  H: '#4f46e5',
-  X: '#a855f7',
-  Y: '#ec4899',
-  Z: '#10b981',
-  CNOT: '#f59e0b',
-  Measure: '#ef4444'
+  H: '#8f102d',
+  X: '#b76e79',
+  Y: '#d19b83',
+  Z: '#8aa58e',
+  CNOT: '#d8ad96',
+  Measure: '#b94b5a'
 };
 
 const CircuitScene2D: React.FC = () => {
@@ -76,8 +76,8 @@ const CircuitScene2D: React.FC = () => {
                   width={PALETTE_W - 40}
                   height={CELL_H - 16}
                   rx={8}
-                  fill={active ? GATE_FILL[g] : '#0f172a'}
-                  stroke={active ? '#a5b4fc' : '#334155'}
+                  fill={active ? GATE_FILL[g] : '#1a1517'}
+                  stroke={active ? '#e4d5cc' : '#3b3030'}
                   strokeWidth={active ? 2 : 1}
                   opacity={active ? 0.95 : 0.9}
                 />
@@ -104,7 +104,7 @@ const CircuitScene2D: React.FC = () => {
               key={t}
               x={stepX(t)}
               y={20}
-              fill="#64748b"
+               fill="#aa9b92"
               fontSize={10}
               textAnchor="middle"
               style={{ userSelect: 'none' }}
@@ -121,10 +121,10 @@ const CircuitScene2D: React.FC = () => {
                   y1={y}
                   x2={PALETTE_W + (timesteps + 0.2) * CELL_W}
                   y2={y}
-                  stroke="#475569"
+                   stroke="#554944"
                   strokeWidth={2}
                 />
-                <text x={PALETTE_W + 8} y={y - 8} fill="#64748b" fontSize={10} style={{ userSelect: 'none' }}>
+                 <text x={PALETTE_W + 8} y={y - 8} fill="#aa9b92" fontSize={10} style={{ userSelect: 'none' }}>
                   q<tspan baselineShift="sub">{i}</tspan>
                 </text>
               </g>
@@ -142,8 +142,8 @@ const CircuitScene2D: React.FC = () => {
                 width={CELL_W * 0.76}
                 height={CELL_H * 0.84}
                 rx={6}
-                fill={cursor.qubit === i && cursor.timestep === t ? 'rgba(99,102,241,0.18)' : 'transparent'}
-                stroke={cursor.qubit === i && cursor.timestep === t ? '#6366f1' : 'transparent'}
+                 fill={cursor.qubit === i && cursor.timestep === t ? 'rgba(143,16,45,0.22)' : 'transparent'}
+                 stroke={cursor.qubit === i && cursor.timestep === t ? '#8f102d' : 'transparent'}
                 strokeDasharray="3 3"
                 style={{ cursor: 'crosshair' }}
                 onClick={() => handleCellClick(i, t)}
@@ -170,7 +170,7 @@ const CircuitScene2D: React.FC = () => {
                     y1={cy}
                     x2={cx}
                     y2={railY(op.target)}
-                    stroke="#f59e0b"
+                     stroke="#d8ad96"
                     strokeWidth={2.2}
                     strokeDasharray="2 3"
                   />
@@ -182,7 +182,7 @@ const CircuitScene2D: React.FC = () => {
                   height={h}
                   rx={8}
                   fill={GATE_FILL[op.gate]}
-                  stroke="#1e293b"
+                   stroke="#292122"
                   strokeWidth={1.4}
                 />
                 <text

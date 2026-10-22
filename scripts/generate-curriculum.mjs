@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUTPUT_PATH = path.join(ROOT, 'apps', 'web', 'src', 'data', 'curriculum.json');
+const CANONICAL_SOURCE_FILENAME = 'QVANTA_Full_Curriculum_Explained.html';
 const EXPECTED_COUNTS = { modules: 527, parts: 39 };
 const VOID_ELEMENTS = new Set([
   'area',
@@ -409,7 +410,7 @@ function buildCurriculum(html, filename) {
 
   return {
     source: {
-      filename,
+      filename: CANONICAL_SOURCE_FILENAME,
       title: textContent(titleNode),
       claimedCounts,
     },

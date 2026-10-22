@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Card, CardHeader, CardTitle, CardContent } from '@qvanta/ui';
 import AvatarScene from '@/components/tutor/AvatarScene';
-import ChatPanel from '@/components/tutor/ChatPanel';
+import ChatPanel, { readSessionModuleContext, type TutorModuleContext } from '@/components/tutor/ChatPanel';
 import { useAuthStore } from '@/store/auth';
 import { AvatarPresetPicker } from '@qvanta/ui';
 import type { AvatarPresetId } from '@qvanta/ui';
@@ -13,6 +13,8 @@ const TutorPage: React.FC = () => {
   const setUser = useAuthStore((s) => s.setUser);
   const [showPicker, setShowPicker] = React.useState(false);
   const [savingPreset, setSavingPreset] = React.useState(false);
+  const [moduleContext] = React.useState<TutorModuleContext | null>(readSessionModuleContext);
+  const [avatarReady, setAvatarReady] = React.useState(false);
 
   const currentPreset: AvatarPresetId = Math.max(0, Math.min(2, (user?.avatarPreset ?? 0))) as AvatarPresetId;
   const numericPresetNum: number = currentPreset;
@@ -34,9 +36,13 @@ const TutorPage: React.FC = () => {
     <div className="flex h-full flex-col gap-4">
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-text-100">AI Tutor</h1>
+          <h1 className="text-2xl font-bold text-text-100">
+            {moduleContext ? `AI Tutor · ${moduleContext.title}` : 'AI Tutor'}
+          </h1>
           <p className="mt-1 text-sm text-text-400">
-            Ask anything about quantum computing. Your tutor answers grounded in lesson content and your current circuit.
+            {moduleContext
+              ? `Your personalised virtual human tutor is ready to guide you through ${moduleContext.title}.`
+              : 'Ask anything about quantum computing. Your tutor answers grounded in lesson content and your current circuit.'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -64,11 +70,18 @@ const TutorPage: React.FC = () => {
       <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <Card className="flex min-h-[460px] flex-col">
           <CardHeader className="flex-row items-center justify-between gap-3 space-y-0 border-b border-bg-800 pb-3">
-            <CardTitle className="text-base">Virtual Tutor</CardTitle>
+            <CardTitle className="text-base">
+              {moduleContext ? `Virtual Tutor · ${moduleContext.title}` : 'Virtual Tutor'}
+            </CardTitle>
             <span className="text-xs text-text-500">Preset #{numericPresetNum + 1}</span>
           </CardHeader>
           <CardContent className="relative flex-1 overflow-hidden p-0">
-            <AvatarScene presetId={currentPreset} />
+            <AvatarScene
+              presetId={currentPreset}
+              sceneKey={moduleContext?.id ?? 'tutor/default'}
+              sceneTitle={moduleContext?.title ?? 'Quantum tutor environment'}
+              onIntroComplete={() => setAvatarReady(true)}
+            />
           </CardContent>
         </Card>
 
@@ -78,7 +91,7 @@ const TutorPage: React.FC = () => {
             <span className="text-xs text-text-500">Responses use RAG over QVANTA lessons</span>
           </CardHeader>
           <CardContent className="flex h-[560px] flex-1 flex-col p-0">
-            <ChatPanel />
+            <ChatPanel moduleContext={moduleContext} avatarReady={avatarReady} />
           </CardContent>
         </Card>
       </div>

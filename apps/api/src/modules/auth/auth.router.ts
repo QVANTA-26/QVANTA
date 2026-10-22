@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Response } from 'express';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { z } from 'zod';
@@ -6,6 +6,7 @@ import {
   registerUser,
   loginUser,
   refreshTokens,
+  revokeRefreshToken,
   findOrCreateGoogleUser,
   issueTokensForUser,
 } from './auth.service';
@@ -15,27 +16,44 @@ import { AppError } from '../../lib/errors';
 export const authRouter = Router();
 
 const registerSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email().transform((value) => value.toLowerCase()),
   password: z.string().min(8),
 });
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email().transform((value) => value.toLowerCase()),
   password: z.string().min(1),
 });
 
 const refreshSchema = z.object({
-  refreshToken: z.string().min(1),
+  refreshToken: z.string().trim().min(1),
 });
 
 const GOOGLE_CALLBACK_PATH = '/auth/google/callback';
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const hasUsableGoogleConfig = Boolean(
+  googleClientId &&
+    googleClientSecret &&
+    !googleClientId.startsWith('your-') &&
+    !googleClientSecret.startsWith('your-')
+);
 
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+const setRefreshCookie = (res: Response, refreshToken: string): void => {
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+};
+
+if (googleClientId && googleClientSecret && hasUsableGoogleConfig) {
   passport.use(
     new GoogleStrategy(
       {
-        clientID: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        clientID: googleClientId,
+        clientSecret: googleClientSecret,
         callbackURL: process.env.GOOGLE_CALLBACK_URL ?? GOOGLE_CALLBACK_PATH,
         scope: ['profile', 'email'],
       },
@@ -73,13 +91,11 @@ authRouter.post('/register', async (req, res, next) => {
       throw AppError.validation('Invalid input', parsed.error.flatten());
     }
     const result = await registerUser(parsed.data);
-    res.cookie('refreshToken', result.tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+    setRefreshCookie(res, result.tokens.refreshToken);
+    res.status(201).json({
+      user: result.user,
+      tokens: { accessToken: result.tokens.accessToken },
     });
-    res.status(201).json(result);
   } catch (err) {
     next(err);
   }
@@ -92,13 +108,11 @@ authRouter.post('/login', async (req, res, next) => {
       throw AppError.validation('Invalid input', parsed.error.flatten());
     }
     const result = await loginUser(parsed.data);
-    res.cookie('refreshToken', result.tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+    setRefreshCookie(res, result.tokens.refreshToken);
+    res.status(200).json({
+      user: result.user,
+      tokens: { accessToken: result.tokens.accessToken },
     });
-    res.status(200).json(result);
   } catch (err) {
     next(err);
   }
@@ -120,20 +134,32 @@ authRouter.post('/refresh', async (req, res, next) => {
     }
 
     const tokens = await refreshTokens(refreshToken);
-    res.cookie('refreshToken', tokens.refreshToken, {
+    setRefreshCookie(res, tokens.refreshToken);
+    res.status(200).json({ accessToken: tokens.accessToken });
+  } catch (err) {
+    next(err);
+  }
+});
+
+authRouter.post('/logout', async (req, res, next) => {
+  try {
+    const cookieToken = req.cookies?.refreshToken as string | undefined;
+    if (cookieToken) {
+      await revokeRefreshToken(cookieToken);
+    }
+    res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
-    res.status(200).json(tokens);
+    res.status(204).end();
   } catch (err) {
     next(err);
   }
 });
 
 authRouter.get('/google', (req, res, next) => {
-  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  if (!hasUsableGoogleConfig) {
     throw AppError.internal('Google OAuth is not configured');
   }
   passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
@@ -141,7 +167,10 @@ authRouter.get('/google', (req, res, next) => {
 
 authRouter.get(
   '/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: '/' }),
+  passport.authenticate('google', {
+    session: false,
+    failureRedirect: `${process.env.WEB_ORIGIN ?? 'http://localhost:5173'}/login?oauth=error`,
+  }),
   async (req, res) => {
     try {
       const user = req.user as
@@ -151,13 +180,12 @@ authRouter.get(
         throw AppError.unauthorized('Google authentication failed');
       }
       const tokens = await issueTokensForUser(user);
-      res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-      const redirectUrl = `${process.env.WEB_ORIGIN ?? 'http://localhost:5173'}/auth/google/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`;
+      setRefreshCookie(res, tokens.refreshToken);
+       // Keep the short-lived access token out of the query string so it is not
+       // copied into ordinary referrer and server access logs. The callback
+       // page consumes the fragment and immediately removes it from history;
+       // the refresh token stays in the httpOnly cookie set above.
+       const redirectUrl = `${process.env.WEB_ORIGIN ?? 'http://localhost:5173'}/auth/google/callback#accessToken=${encodeURIComponent(tokens.accessToken)}`;
       logger.info(`Google OAuth success for user: ${user.id}`);
       res.redirect(redirectUrl);
     } catch (err) {

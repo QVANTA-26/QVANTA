@@ -13,13 +13,13 @@ interface ButtonProps
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary text-white hover:bg-primary-700 focus-visible:ring-primary-500 shadow-sm",
+    "bg-primary text-white shadow-[0_10px_24px_rgba(109,0,26,0.22)] hover:bg-primary-700 hover:shadow-[0_14px_30px_rgba(109,0,26,0.3)] focus-visible:ring-primary-400",
   secondary:
-    "bg-bg-800 text-text-100 border border-bg-700 hover:bg-bg-700 focus-visible:ring-primary-500 shadow-sm",
+    "border border-bg-700 bg-bg-800 text-text-100 shadow-sm hover:border-accent-700 hover:bg-bg-700 focus-visible:ring-primary-400",
   ghost:
-    "bg-transparent text-text-100 hover:bg-bg-800 focus-visible:ring-primary-500",
+    "bg-transparent text-text-100 hover:bg-bg-800 hover:text-accent-300 focus-visible:ring-primary-400",
   destructive:
-    "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 shadow-sm"
+    "bg-red-700 text-white shadow-sm hover:bg-red-800 focus-visible:ring-red-400"
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -43,7 +43,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseClasses =
-      "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-950 disabled:pointer-events-none disabled:opacity-50";
+      "inline-flex items-center justify-center font-medium transition-[background-color,border-color,color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-950 active:translate-y-px disabled:pointer-events-none disabled:opacity-50";
     const isDisabled = Boolean(disabled) || loading;
 
     return (

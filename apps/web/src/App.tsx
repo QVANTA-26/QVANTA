@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth';
 import Layout from '@/components/layout/Layout';
 
@@ -13,6 +13,7 @@ const NotFoundPage = lazy(() => import('@/pages/NotFound'));
 const AuthGoogleCallbackPage = lazy(() => import('@/pages/AuthGoogleCallback'));
 const DashboardPage = lazy(() => import('@/pages/Dashboard'));
 const LearnPage = lazy(() => import('@/pages/Learn'));
+const AlgorithmsPage = lazy(() => import('@/pages/Algorithms'));
 const CurriculumPage = lazy(() => import('@/pages/Curriculum'));
 const CircuitBuilderPage = lazy(() => import('@/pages/CircuitBuilderPage'));
 const TutorPage = lazy(() => import('@/pages/Tutor'));
@@ -34,9 +35,11 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    const destination = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to={`/login?next=${encodeURIComponent(destination)}`} replace />;
   }
 
   return <>{children ?? <Outlet />}</>;
@@ -62,6 +65,7 @@ const AppRoutes: React.FC = () => {
         >
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/learn" element={<LearnPage />} />
+          <Route path="/algorithms" element={<AlgorithmsPage />} />
           <Route path="/curriculum" element={<CurriculumPage />} />
           <Route path="/circuit/:id?" element={<CircuitBuilderPage />} />
           <Route path="/tutor" element={<TutorPage />} />

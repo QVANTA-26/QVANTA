@@ -4,6 +4,9 @@ const ACCESS_TOKEN_KEY = 'qvanta_token';
 const REFRESH_TOKEN_KEY = 'qvanta_refresh_token';
 const DEV_ACCESS_TOKEN = 'dev-token';
 
+const configuredApiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+export const API_BASE_URL = configuredApiUrl ? configuredApiUrl.replace(/\/+$/, '') : '/api';
+
 const clearAuthStorage = () => {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
@@ -35,14 +38,23 @@ const isNetworkError = (error: AxiosError): boolean => {
 };
 
 export const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   timeout: 30000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-let isRefreshing = false;
+const refreshClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
 let refreshPromise: Promise<string> | null = null;
 
 const refreshAccessToken = async (): Promise<string> => {
@@ -53,17 +65,13 @@ const refreshAccessToken = async (): Promise<string> => {
     return refreshPromise;
   }
 
-  isRefreshing = true;
   refreshPromise = (async () => {
     try {
       const refreshToken = getRefreshToken();
       const payload = refreshToken ? { refreshToken } : {};
-      const response = await axios.post<{ accessToken: string; refreshToken?: string }>(
-        '/api/auth/refresh',
-        payload,
-        {
-          baseURL: ''
-        }
+      const response = await refreshClient.post<{ accessToken: string; refreshToken?: string }>(
+        '/auth/refresh',
+        payload
       );
 
       const { accessToken, refreshToken: newRefreshToken } = response.data;
@@ -73,16 +81,9 @@ const refreshAccessToken = async (): Promise<string> => {
       }
       return accessToken;
     } catch (err) {
-      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        return DEV_ACCESS_TOKEN;
-      }
       clearAuthStorage();
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
       throw err;
     } finally {
-      isRefreshing = false;
       refreshPromise = null;
     }
   })();
@@ -93,7 +94,10 @@ const refreshAccessToken = async (): Promise<string> => {
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
-    if (token && config.headers) {
+    const hasAuthorizationHeader = Boolean(
+      config.headers?.Authorization ?? config.headers?.authorization
+    );
+    if (token && config.headers && !hasAuthorizationHeader) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -104,15 +108,22 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
+    const originalRequest = error.config as (InternalAxiosRequestConfig & {
       _retry?: boolean;
-    };
+    }) | undefined;
 
     if (isNetworkError(error)) {
       return Promise.reject(error);
     }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
+    const requestUrl = originalRequest.url ?? '';
+    const isAuthRequest = /\/auth\/(login|register|refresh|logout)(?:\/|$)/.test(requestUrl);
+
+    if (error.response?.status === 401 && !isAuthRequest && !originalRequest._retry) {
       if (isDevTokenActive()) {
         return Promise.reject(error);
       }
@@ -125,11 +136,9 @@ apiClient.interceptors.response.use(
         }
         return apiClient(originalRequest);
       } catch (refreshErr) {
-        if (!(typeof window !== 'undefined' && window.location.hostname === 'localhost')) {
-          clearAuthStorage();
-          if (typeof window !== 'undefined') {
-            window.location.href = '/login';
-          }
+        clearAuthStorage();
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
         }
         return Promise.reject(refreshErr);
       }
@@ -138,5 +147,10 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const getApiUrl = (path: string): string => {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_URL}${normalizedPath}`;
+};
 
 export { clearAuthStorage, getAccessToken, setAccessToken, setRefreshToken };

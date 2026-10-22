@@ -84,17 +84,17 @@ const BlochSphereSVG: React.FC<BlochSphereSVGProps> = ({ size = 220, reducedMoti
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      className="drop-shadow-[0_0_40px_rgba(139,107,255,0.25)]"
+       className="drop-shadow-[0_0_40px_rgba(109,0,26,0.25)]"
     >
       <defs>
         <radialGradient id={gradId} cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stopColor="#8b6bff" stopOpacity="0.18" />
-          <stop offset="60%" stopColor="#34e0ff" stopOpacity="0.06" />
-          <stop offset="100%" stopColor="#06050f" stopOpacity="0" />
+           <stop offset="0%" stopColor="#8f102d" stopOpacity="0.22" />
+           <stop offset="60%" stopColor="#e4d5cc" stopOpacity="0.07" />
+           <stop offset="100%" stopColor="#0d0b0c" stopOpacity="0" />
         </radialGradient>
         <linearGradient id={grad2Id} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#8b6bff" />
-          <stop offset="100%" stopColor="#34e0ff" />
+           <stop offset="0%" stopColor="#8f102d" />
+           <stop offset="100%" stopColor="#e4d5cc" />
         </linearGradient>
       </defs>
 
@@ -103,26 +103,26 @@ const BlochSphereSVG: React.FC<BlochSphereSVGProps> = ({ size = 220, reducedMoti
       <ellipse cx={cx} cy={cy} rx={r} ry={r * 0.28} fill="none" stroke="#9a96bd" strokeOpacity="0.2" strokeWidth="1" />
       <ellipse cx={cx} cy={cy} rx={r * 0.28} ry={r} fill="none" stroke="#9a96bd" strokeOpacity="0.18" strokeWidth="1" transform={`rotate(20 ${cx} ${cy})`} />
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="url(#bloch-stroke)" strokeOpacity="0.35" strokeWidth="1.2" />
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#8b6bff" strokeOpacity="0.35" strokeWidth="1.2" />
+       <circle cx={cx} cy={cy} r={r} fill="none" stroke="#8f102d" strokeOpacity="0.35" strokeWidth="1.2" />
 
       <line x1={cx - r * 1.1} y1={cy} x2={cx + r * 1.1} y2={cy} stroke="#9a96bd" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
       <line x1={cx} y1={cy - r * 1.1} x2={cx} y2={cy + r * 1.1} stroke="#9a96bd" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 4" />
 
-      <line x1={cx} y1={cy} x2={screenX} y2={screenY} stroke="#8b6bff" strokeWidth="1.6" strokeOpacity="0.85" />
-      <line x1={cx} y1={cy} x2={screenX2} y2={screenY2} stroke="#34e0ff" strokeWidth="1.6" strokeOpacity="0.85" />
+       <line x1={cx} y1={cy} x2={screenX} y2={screenY} stroke="#8f102d" strokeWidth="1.6" strokeOpacity="0.85" />
+       <line x1={cx} y1={cy} x2={screenX2} y2={screenY2} stroke="#e4d5cc" strokeWidth="1.6" strokeOpacity="0.85" />
 
-      <circle cx={screenX} cy={screenY} r="6.5" fill="#8b6bff">
+       <circle cx={screenX} cy={screenY} r="6.5" fill="#8f102d">
         <animate attributeName="r" values="5.5;7.5;5.5" dur="2.2s" repeatCount="indefinite" />
       </circle>
-      <circle cx={screenX} cy={screenY} r="11" fill="none" stroke="#8b6bff" strokeOpacity="0.35">
+       <circle cx={screenX} cy={screenY} r="11" fill="none" stroke="#8f102d" strokeOpacity="0.35">
         <animate attributeName="r" values="9;16;9" dur="2.2s" repeatCount="indefinite" />
         <animate attributeName="stroke-opacity" values="0.45;0;0.45" dur="2.2s" repeatCount="indefinite" />
       </circle>
 
-      <circle cx={screenX2} cy={screenY2} r="6.5" fill="#34e0ff">
+       <circle cx={screenX2} cy={screenY2} r="6.5" fill="#e4d5cc">
         <animate attributeName="r" values="5.5;7.5;5.5" dur="2.2s" begin="1.1s" repeatCount="indefinite" />
       </circle>
-      <circle cx={screenX2} cy={screenY2} r="11" fill="none" stroke="#34e0ff" strokeOpacity="0.35">
+       <circle cx={screenX2} cy={screenY2} r="11" fill="none" stroke="#e4d5cc" strokeOpacity="0.35">
         <animate attributeName="r" values="9;16;9" dur="2.2s" begin="1.1s" repeatCount="indefinite" />
         <animate attributeName="stroke-opacity" values="0.45;0;0.45" dur="2.2s" begin="1.1s" repeatCount="indefinite" />
       </circle>
@@ -131,8 +131,8 @@ const BlochSphereSVG: React.FC<BlochSphereSVGProps> = ({ size = 220, reducedMoti
       <text x={cx} y={cy + r + 16} textAnchor="middle" fill="#9a96bd" fontSize="10" fontFamily="'JetBrains Mono', monospace">|1⟩</text>
       <text x={cx + r + 8} y={cy + 4} textAnchor="start" fill="#9a96bd" fontSize="10" fontFamily="'JetBrains Mono', monospace">x</text>
       <text x={cx - r - 8} y={cy + 4} textAnchor="end" fill="#9a96bd" fontSize="10" fontFamily="'JetBrains Mono', monospace">y</text>
-      <text x={screenX + 10} y={screenY - 10} fill="#8b6bff" fontSize="9" fontFamily="'JetBrains Mono', monospace">q₀</text>
-      <text x={screenX2 - 10} y={screenY2 - 10} textAnchor="end" fill="#34e0ff" fontSize="9" fontFamily="'JetBrains Mono', monospace">q₁</text>
+       <text x={screenX + 10} y={screenY - 10} fill="#8f102d" fontSize="9" fontFamily="'JetBrains Mono', monospace">q₀</text>
+       <text x={screenX2 - 10} y={screenY2 - 10} textAnchor="end" fill="#e4d5cc" fontSize="9" fontFamily="'JetBrains Mono', monospace">q₁</text>
     </svg>
   );
 };
@@ -208,7 +208,7 @@ const ParticleOrb: React.FC = () => {
         opacity={0.72}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
-        color="#8b6bff"
+         color="#8f102d"
       />
     </points>
   );
@@ -350,7 +350,7 @@ const TutorEditorScreen: React.FC = () => {
 
       <div className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-8">
         <div className="mb-10 text-center">
-          <p className="mb-3 font-mono-quantum text-xs tracking-wider text-cyan/80">
+           <p className="mb-3 font-mono-quantum text-xs tracking-wider text-accent/80">
             live session · qiskit · bell |φ⁺⟩
           </p>
           <h2
@@ -365,7 +365,7 @@ const TutorEditorScreen: React.FC = () => {
         <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-5">
           {/* Code Editor */}
           <div className="lg:col-span-5">
-            <div className="group relative overflow-hidden rounded-2xl border border-white/5 bg-bg-2/70 shadow-[0_20px_60px_-20px_rgba(139,107,255,0.28)] backdrop-blur-sm">
+             <div className="group relative overflow-hidden rounded-2xl border border-white/5 bg-bg-2/70 shadow-[0_20px_60px_-20px_rgba(109,0,26,0.28)] backdrop-blur-sm">
               <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5">
                 <div className="flex items-center gap-2">
                   <span className="h-2.5 w-2.5 rounded-full bg-rose-400/70" />
@@ -376,10 +376,10 @@ const TutorEditorScreen: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-violet/30 bg-violet/10 px-2.5 py-0.5 font-mono-quantum text-[10px] text-violet">
+                   <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 font-mono-quantum text-[10px] text-primary-200">
                     python
                   </span>
-                  <span className="rounded-full border border-cyan/30 bg-cyan/10 px-2.5 py-0.5 font-mono-quantum text-[10px] text-cyan">
+                   <span className="rounded-full border border-accent/30 bg-accent/10 px-2.5 py-0.5 font-mono-quantum text-[10px] text-accent-200">
                     qiskit
                   </span>
                 </div>
@@ -417,32 +417,32 @@ const TutorEditorScreen: React.FC = () => {
                       inherit: true,
                       rules: [
                         { token: 'comment', foreground: '9a96bd', fontStyle: 'italic' },
-                        { token: 'keyword', foreground: 'c084fc', fontStyle: 'bold' },
-                        { token: 'keyword.import', foreground: '8b6bff' },
-                        { token: 'string', foreground: '67e8f9' },
-                        { token: 'number', foreground: 'fde68a' },
-                        { token: 'type', foreground: 'c7bfff' },
-                        { token: 'function', foreground: 'a78bfa' },
-                        { token: 'method', foreground: '22d3ee' },
-                        { token: 'delimiter', foreground: '9a96bd' },
-                        { token: 'operator', foreground: '34e0ff' },
-                        { token: 'variable', foreground: 'eeecff' },
-                        { token: 'constant', foreground: 'fca5a5' },
-                        { token: 'attribute', foreground: 'fcd34d' }
+                         { token: 'keyword', foreground: 'd19b83', fontStyle: 'bold' },
+                         { token: 'keyword.import', foreground: '8f102d' },
+                         { token: 'string', foreground: 'e4d5cc' },
+                         { token: 'number', foreground: 'f0ddd3' },
+                         { token: 'type', foreground: 'f7f1eb' },
+                         { token: 'function', foreground: 'd8ad96' },
+                         { token: 'method', foreground: 'b76e79' },
+                         { token: 'delimiter', foreground: 'aa9b92' },
+                         { token: 'operator', foreground: 'e4d5cc' },
+                         { token: 'variable', foreground: 'f7f1eb' },
+                         { token: 'constant', foreground: 'fda4b2' },
+                         { token: 'attribute', foreground: 'f0ddd3' }
                       ],
                       colors: {
-                        'editor.background': '#080714',
-                        'editor.foreground': '#eeecff',
-                        'editorLineNumber.foreground': '#3d3a60',
-                        'editorLineNumber.activeForeground': '#8b6bff',
-                        'editor.lineHighlightBackground': '#13102a',
-                        'editorCursor.foreground': '#34e0ff',
-                        'editor.selectionBackground': '#8b6bff40',
-                        'editor.inactiveSelectionBackground': '#8b6bff1a',
-                        'editorIndentGuide.background': '#1a1733',
-                        'editorGutter.background': '#080714',
-                        'editorBracketMatch.border': '#34e0ff55',
-                        'editorBracketMatch.background': '#34e0ff10'
+                         'editor.background': '#0c0a0c',
+                         'editor.foreground': '#f7f1eb',
+                         'editorLineNumber.foreground': '#554944',
+                         'editorLineNumber.activeForeground': '#d8ad96',
+                         'editor.lineHighlightBackground': '#1a1517',
+                         'editorCursor.foreground': '#e4d5cc',
+                         'editor.selectionBackground': '#8f102d40',
+                         'editor.inactiveSelectionBackground': '#8f102d1a',
+                         'editorIndentGuide.background': '#292122',
+                         'editorGutter.background': '#0c0a0c',
+                         'editorBracketMatch.border': '#e4d5cc55',
+                         'editorBracketMatch.background': '#e4d5cc10'
                       }
                     });
                   }}
@@ -462,7 +462,7 @@ const TutorEditorScreen: React.FC = () => {
                               options: {
                                 isWholeLine: true,
                                 linesDecorationsClassName: 'qvanta-line-violet',
-                                overviewRuler: { color: '#8b6bff', position: monaco.editor.OverviewRulerLane.Full }
+                                 overviewRuler: { color: '#8f102d', position: monaco.editor.OverviewRulerLane.Full }
                               }
                             },
                             {
@@ -470,7 +470,7 @@ const TutorEditorScreen: React.FC = () => {
                               options: {
                                 isWholeLine: true,
                                 linesDecorationsClassName: 'qvanta-line-cyan',
-                                overviewRuler: { color: '#34e0ff', position: monaco.editor.OverviewRulerLane.Full }
+                                 overviewRuler: { color: '#e4d5cc', position: monaco.editor.OverviewRulerLane.Full }
                               }
                             }
                           ]
@@ -482,8 +482,8 @@ const TutorEditorScreen: React.FC = () => {
                   }}
                 />
                 <style>{`
-                  .qvanta-line-violet { background: linear-gradient(90deg, rgba(139,107,255,0.16), rgba(139,107,255,0.02) 80%); border-left: 2px solid #8b6bff; }
-                  .qvanta-line-cyan   { background: linear-gradient(90deg, rgba(52,224,255,0.14), rgba(52,224,255,0.02) 80%); border-left: 2px solid #34e0ff; }
+                   .qvanta-line-violet { background: linear-gradient(90deg, rgba(143,16,45,0.18), rgba(143,16,45,0.02) 80%); border-left: 2px solid #8f102d; }
+                   .qvanta-line-cyan   { background: linear-gradient(90deg, rgba(228,213,204,0.14), rgba(228,213,204,0.02) 80%); border-left: 2px solid #e4d5cc; }
                 `}</style>
               </div>
             </div>
@@ -532,10 +532,10 @@ const TutorEditorScreen: React.FC = () => {
 
           {/* AI Tutor chat panel */}
           <div className="flex flex-col justify-center gap-4 lg:col-span-4">
-            <div className="relative flex min-h-[520px] flex-col rounded-2xl border border-white/5 bg-bg-2/60 shadow-[0_20px_60px_-20px_rgba(52,224,255,0.2)] backdrop-blur-sm">
+             <div className="relative flex min-h-[520px] flex-col rounded-2xl border border-white/5 bg-bg-2/60 shadow-[0_20px_60px_-20px_rgba(216,173,150,0.18)] backdrop-blur-sm">
               <div className="mb-2 flex items-center justify-between border-b border-white/5 bg-bg-1/40 px-5 py-3">
                 <div className="flex items-center gap-3">
-                  <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet to-cyan shadow-[0_0_20px_rgba(139,107,255,0.4)]">
+                   <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-600 to-accent-500 shadow-[0_0_20px_rgba(109,0,26,0.4)]">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#06050f" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 2a5 5 0 0 0-5 5v1a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5z" />
                       <path d="M5 12v3a7 7 0 0 0 14 0v-3" />
@@ -570,7 +570,7 @@ const TutorEditorScreen: React.FC = () => {
                       className={[
                         'max-w-[92%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
                         m.role === 'user'
-                          ? 'rounded-br-md bg-gradient-to-br from-violet/90 to-violet-70/90 text-white shadow-[0_6px_18px_-6px_rgba(139,107,255,0.5)]'
+                           ? 'rounded-br-md bg-gradient-to-br from-primary-500/90 to-primary-700/90 text-white shadow-[0_6px_18px_-6px_rgba(109,0,26,0.5)]'
                           : [
                               'rounded-bl-md border text-ink-dim',
                               m.highlight === 'violet'
@@ -612,7 +612,7 @@ const TutorEditorScreen: React.FC = () => {
 
               {/* Input */}
               <div className="border-t border-white/5 p-3">
-                <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-bg-1/70 px-3 py-2 focus-within:border-cyan/40 focus-within:shadow-[0_0_0_3px_rgba(52,224,255,0.08)] transition">
+                 <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-bg-1/70 px-3 py-2 focus-within:border-accent/40 focus-within:shadow-[0_0_0_3px_rgba(216,173,150,0.08)] transition">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#9a96bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
@@ -629,7 +629,7 @@ const TutorEditorScreen: React.FC = () => {
                   <button
                     onClick={sendQuestion}
                     disabled={!input.trim()}
-                    className="flex h-8 items-center gap-1 rounded-lg bg-gradient-to-br from-violet to-cyan px-3 text-xs font-semibold text-bg-1 shadow-[0_4px_14px_-4px_rgba(139,107,255,0.6)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                     className="flex h-8 items-center gap-1 rounded-lg bg-gradient-to-br from-primary-600 to-accent-500 px-3 text-xs font-semibold text-bg-1 shadow-[0_4px_14px_-4px_rgba(109,0,26,0.6)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                   >
                     Send
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">

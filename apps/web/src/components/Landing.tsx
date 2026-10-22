@@ -173,9 +173,9 @@ export default function Landing({ phase, reducedMotion }: LandingProps) {
       return gradient;
     };
 
-    svg.appendChild(createGradient('landing-logo-left', ['#8B5CF6', '#A855F7', '#EC4899']));
-    svg.appendChild(createGradient('landing-logo-center', ['#6366F1', '#3B82F6', '#22D3EE']));
-    svg.appendChild(createGradient('landing-logo-right', ['#8B5CF6', '#A855F7', '#EC4899']));
+    svg.appendChild(createGradient('landing-logo-left', ['#F7F1EB', '#D8AD96', '#8F102D']));
+    svg.appendChild(createGradient('landing-logo-center', ['#FFFAF7', '#E4D5CC', '#6D001A']));
+    svg.appendChild(createGradient('landing-logo-right', ['#F7F1EB', '#D8AD96', '#8F102D']));
 
     const leftBar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     leftBar.setAttribute('x', String(targetWidth * 0.06));
@@ -501,15 +501,21 @@ export default function Landing({ phase, reducedMotion }: LandingProps) {
 
       <div className={`landing-tagline${taglineVisible ? ' is-visible' : ''}`}>
         <span className="landing-tagline__kicker">Think in states <b>·</b> Build with qubits</span>
-        <p>An interactive quantum computing workspace. Design circuits, explore Bloch spheres, and learn quantum mechanics — one qubit at a time.</p>
+        <p>Follow a guided path from your first qubit to a working circuit: design circuits, explore Bloch spheres, and learn quantum mechanics — one qubit at a time.</p>
       </div>
 
       <div id="landing-actions" className={`landing-actions${actionsVisible ? ' is-visible' : ''}`}>
         <Link className="landing-action landing-action--primary" to="/home" tabIndex={actionsVisible ? 0 : -1}>
           Enter the workspace <ArrowIcon />
         </Link>
+        <Link className="landing-action landing-action--visual" to="/learn" tabIndex={actionsVisible ? 0 : -1}>
+          Explore the Learning Lab <span aria-hidden="true">↗</span>
+        </Link>
         <Link className="landing-action landing-action--quiet" to="/register" tabIndex={actionsVisible ? 0 : -1}>
           Create a free account <span aria-hidden="true">↗</span>
+        </Link>
+        <Link className="landing-action landing-action--quiet" to="/login" tabIndex={actionsVisible ? 0 : -1}>
+          Sign in <span aria-hidden="true">↗</span>
         </Link>
       </div>
 

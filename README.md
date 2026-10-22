@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-# QVANTA — Quantum Computing Education SaaS (MVP)
+# QVANTA — Quantum Computing Education SaaS
 
 QVANTA is a production-grade, multi-tenant SaaS platform for interactive quantum computing education. The MVP ships with: structured auth, a 3D drag-drop circuit builder (React Three Fiber), synced Monaco Qiskit editor, Qiskit Aer simulation with measurement histograms, animated 3D Bloch spheres, a 3D virtual human AI tutor with lip-sync and optional Claude RAG, and Stripe Free/Pro tiers.
 
@@ -15,34 +14,48 @@ QVANTA is a production-grade, multi-tenant SaaS platform for interactive quantum
 │   ├── types/        # Shared TypeScript types (Circuit, GateOp, TutorMessage, etc.)
 │   └── ui/           # Shared React component library + Tailwind preset
 └── infra/
-    ├── docker-compose.yml     # Postgres 16 + pgvector + Redis 7
+     ├── docker-compose.yml     # Postgres 16 + Redis 7 (pgvector optional)
     ├── api/Dockerfile         # API service image
     ├── simulator/Dockerfile   # Simulator microservice image
     ├── web/Dockerfile         # Web frontend image
-    └── .github/workflows/ci.yml
+    └── .github/workflows/ci.yml  # CI gates; release.yml publishes tagged web images
 ```
 
 ## Quick Start (10 steps, 5–10 minutes)
 
-1. **Prerequisites**: Docker + Docker Compose, Node.js 20+, Python 3.11+, npm.
+1. **Prerequisites**: Docker + Docker Compose, Node.js 20 (the pinned version is in `.nvmrc`), Python 3.11+, npm.
 
-2. **Start infrastructure** (Postgres with pgvector + Redis):
+2. **Start infrastructure** (Postgres + Redis; pgvector is optional):
    ```bash
    docker compose -f infra/docker-compose.yml up -d
    ```
 
 3. **Install npm dependencies** at the monorepo root:
-   ```bash
-   npm install
-   ```
+    ```bash
+    npm ci
+    ```
 
 4. **Copy + fill the env templates** (leave third-party keys blank for demo mode):
    ```bash
    cp apps/api/.env.example apps/api/.env
    cp apps/web/.env.example apps/web/.env
-   cp apps/simulator/.env.example apps/simulator/.env
-   ```
-   Demo-mode notes: the platform runs without `GOOGLE_*`, `STRIPE_*`, or `ANTHROPIC_API_KEY` — Stripe CTA buttons are still present, and the tutor falls back to a keyword-driven canned-reply path.
+     cp apps/simulator/.env.example apps/simulator/.env
+     ```
+     For the checked-in 527-module curriculum, keep `SEED_CURRICULUM=1` in
+     `apps/api/.env`. The API seeds stable numeric module ids so lesson progress,
+     checkpoints, and tutor retrieval share the same source-backed curriculum.
+     Demo-mode notes: the platform runs without `GOOGLE_*`, `STRIPE_*`, or `ANTHROPIC_API_KEY` — Stripe CTA buttons are still present, and the tutor falls back to a keyword-driven canned-reply path.
+
+    On a local web host (`localhost`, `127.0.0.1`, or `::1`), the login page exposes a
+    development-only demo ID so the authenticated UI can be tried without the API:
+
+    ```text
+    Email:    dev@qvanta.ai
+    Password: dev-password
+    ```
+
+    This account is not a production identity and must not be enabled or reused as a
+    real deployment credential.
 
 5. **Install Python simulator dependencies** (optional — usage-guard already validates simulator liveness at request time; skip for quick smoke-test):
    ```bash
@@ -68,13 +81,13 @@ QVANTA is a production-grade, multi-tenant SaaS platform for interactive quantum
    ```bash
    npm --workspace api run dev
    ```
-   Listens on `http://localhost:3000`. Seeds an admin user from `ADMIN_EMAIL` / `ADMIN_PASSWORD_HASH` on first boot.
+   Listens on `http://localhost:3001`. Seeds an admin user from `ADMIN_EMAIL` / `ADMIN_PASSWORD_HASH` on first boot.
 
 9. **Start the Vite web frontend** (terminal 3):
    ```bash
    npm --workspace web run dev
    ```
-   Vite proxies `/api` → `localhost:3000`. Open `http://localhost:5173`.
+   Vite proxies `/api` → `localhost:3001`. Open `http://localhost:5173`.
 
 10. **Smoke-test the MVP happy-path**:
     1. Register a local email/password user (no Google OAuth needed for dev).
@@ -82,6 +95,33 @@ QVANTA is a production-grade, multi-tenant SaaS platform for interactive quantum
     3. Open *Circuit Builder* → drag H onto q0·t0, drag CNOT(q0→q1) to t1 → add Measure on both at t2 → click **Simulate** (1024 shots). Bell histogram should show ~50% `00` and ~50% `11`.
     4. Open *AI Tutor* → ask "What does H do?" → reply should include the keyword "superposition" → TTS plays → 3D mouth visemes animate between closed/A/O → refresh the page → conversation history persists.
     5. *Billing* page shows the Free tier. Clicking Upgrade opens the Stripe checkout (mocked checkout session in test mode).
+
+## Learning Lab
+
+The authenticated **Learn** workspace is available at `/learn` and is linked from the
+sidebar. It provides a guided learning loop without replacing the existing Dashboard,
+Circuit Builder, or AI Tutor:
+
+- **Roadmap**: four beginner-friendly chapters with short lesson steps, resumable progress,
+  prediction checkpoints, mastery, XP, and a 3D Bloch-sphere-style state playground. Apply
+  H, measure, reset, and orbit the scene with the pointer.
+- **Progress sync**: the web client prefers authenticated `/lessons/progress` persistence
+  and falls back to versioned browser storage when the API is unavailable. The API stores
+  last step, checkpoint state, mastery, XP, and attempt history per learner.
+- **Checkpoints**: source-backed course checkpoints are derived from explicit lesson
+  checkpoint content. Structured quizzes can provide answer keys; checklist content is
+  self-attested rather than scored from invented answers.
+- **Contests**: beginner/intermediate challenge briefs with filters and local join/leave
+  state. Use Circuit Builder to create the actual circuit for a challenge.
+- **Discussions**: searchable topic filters, local upvotes, thread preview, and a local
+  composer for practicing explanations before a backend discussion service is connected.
+- **Full Curriculum**: the authenticated `/curriculum` explorer renders the attached,
+  source-backed 39-part / 527-module curriculum with search, part and level filters,
+  progress, sequential navigation, exact section content, module-specific circuits,
+  checkpoints, and a handoff into the virtual tutor.
+
+The public `/` landing page now previews these three entry points and the visual-learning
+approach. Existing `/home` showcase sections remain available from the landing page.
 
 ## Tiered Plans
 
@@ -95,7 +135,7 @@ QVANTA is a production-grade, multi-tenant SaaS platform for interactive quantum
 
 `tutor.service.ts` in `apps/api` operates in two modes, auto-detected at boot:
 
-- **Claude mode** (when `ANTHROPIC_API_KEY` is set): calls `claude-3-haiku-20240307` with a system prompt that injects (1) pgvector/keyword RAG snippets from `CourseModule.mdxContent`, (2) the current circuit JSON AST, (3) pre-flight heuristic circuit warnings — missing Measure gates, self-target CNOT, out-of-range qubit indices. Up to 8 prior turns are threaded for context.
+- **Claude mode** (when `ANTHROPIC_API_KEY` is set): calls `claude-3-haiku-20240307` with a system prompt that injects (1) course-module/keyword RAG snippets from `CourseModule.mdxContent`, (2) the current circuit JSON AST, (3) pre-flight heuristic circuit warnings — missing Measure gates, self-target CNOT, out-of-range qubit indices. Up to 8 prior turns are threaded for context.
 - **Demo mode** (no key): falls back to an enhanced keyword-coaching engine, so tutor UX works fully locally without secrets. RAG uses substring keyword scoring on course modules.
 
 ## MVP Acceptance Criteria Checklist
@@ -112,7 +152,51 @@ QVANTA is a production-grade, multi-tenant SaaS platform for interactive quantum
 | 8  | Per-qubit Bloch spheres; step-through animation shows |0⟩→|+⟩ after H                   | ✅      |
 | 9  | Mobile-responsive sidebar + Lite 2D SVG fallback toggle                                   | ✅      |
 | 10 | `npm -w @qvanta/types/ui build`, `npm -w api typecheck`, `npm -w web build` all exit 0    | ✅      |
-=======
-# QVANTA
-Interactive quantum learning platform: build circuits in a 3D/2D visual builder or Qiskit code (always in sync), run them on Qiskit Aer, view result histograms, and get circuit-aware AI tutoring that spots errors in your own circuit. Team Code Busters · SIH 2026
->>>>>>> b44b2eb1858a2cc7d7aa698fc6553768ce7ed2c3
+
+## Reproducible checks and deployment
+
+From the repository root, with dependencies installed from `package-lock.json`:
+
+```bash
+# Install exactly the versions recorded in package-lock.json.
+npm ci
+
+# The offline-friendly repository, typecheck, and production-build checks.
+npm test
+npm run prisma:generate
+npm run typecheck
+npm run build
+
+# The complete repository check target, including Prisma client generation.
+make test
+```
+
+`npm test` validates the workspace and lockfile metadata without network access. After
+dependencies have been installed, Prisma generation, typechecking, and building also
+run locally without calling application services. `make test` runs the repository
+verification, Prisma generation, typecheck, and build. The equivalent commands are
+shown above when GNU Make is not available.
+
+Build and run the production web container with the repository Dockerfile:
+
+```bash
+make docker-check
+# or: npm run docker:check
+docker run --rm -p 8080:80 qvanta-web:ci
+```
+
+Open `http://localhost:8080`. The nginx configuration falls back to `index.html`, so
+client-side routes such as `/learn` continue to work after a refresh.
+
+The repository foundation and release boundaries are documented in:
+
+- [`docs/architecture.md`](docs/architecture.md) — current runtime and workspace boundaries.
+- [`docs/ci-cd.md`](docs/ci-cd.md) — CI gates, GHCR publishing, and deployment limitations.
+- [`docs/product-baseline.md`](docs/product-baseline.md) — product baseline and non-functional requirements.
+- [`docs/security-privacy.md`](docs/security-privacy.md) — secrets, data-flow, and privacy boundaries.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution and release expectations.
+- [`SECURITY.md`](SECURITY.md) — vulnerability reporting and security boundaries.
+
+Public legal baseline pages are available at `/terms` and `/privacy`. They are
+plain-language templates with intentional placeholder contact details; replace them
+and obtain counsel review before a production launch.

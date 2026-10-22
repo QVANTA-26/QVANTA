@@ -24,7 +24,7 @@ const HeroScreen: React.FC = () => {
         >
           <HomepageSceneLighting />
           <AmbientStarfield extent={[40, 26, 30]} color="#eeecff" density={280} />
-          <AmbientStarfield extent={[28, 18, 20]} color="#8b6bff" density={160} />
+           <AmbientStarfield extent={[28, 18, 20]} color="#8f102d" density={160} />
         </Canvas>
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-bg-1/80 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-bg-1/95 to-transparent" />
@@ -60,8 +60,8 @@ const HeroScreen: React.FC = () => {
             variant="primary"
             onClick={() => navigate('/register')}
             style={{
-              background: 'linear-gradient(135deg,#8b6bff 0%,#633dff 100%)',
-              boxShadow: '0 10px 40px -10px rgba(139,107,255,0.6)'
+               background: 'linear-gradient(135deg,#6d001a 0%,#8f102d 100%)',
+               boxShadow: '0 10px 40px -10px rgba(109,0,26,0.6)'
             }}
           >
             Start learning →

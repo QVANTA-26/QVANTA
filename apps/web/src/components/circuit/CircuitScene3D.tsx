@@ -63,12 +63,12 @@ const GateMesh: React.FC<GateMeshProps> = ({
   };
 
   const color =
-    gate === 'H' ? '#4f46e5' :
-    gate === 'X' ? '#a855f7' :
-    gate === 'Y' ? '#ec4899' :
-    gate === 'Z' ? '#10b981' :
-    gate === 'CNOT' ? '#f59e0b' :
-    '#ef4444';
+    gate === 'H' ? '#8f102d' :
+    gate === 'X' ? '#b76e79' :
+    gate === 'Y' ? '#d19b83' :
+    gate === 'Z' ? '#8aa58e' :
+    gate === 'CNOT' ? '#d8ad96' :
+    '#b94b5a';
 
   const isCNOT = gate === 'CNOT';
 
@@ -112,7 +112,7 @@ const GateMesh: React.FC<GateMeshProps> = ({
           <button
             onClick={(e) => { e.stopPropagation(); onRemove(); }}
             title="Remove gate (double-click in 2D view)"
-            className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white opacity-90 hover:bg-red-500"
+             className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-700 text-[10px] font-bold text-white opacity-90 hover:bg-primary-500"
           >
             ×
           </button>
@@ -162,7 +162,7 @@ const GatePalette: React.FC<{ maxStep: number; onDrop: (g: Gate, p: THREE.Vector
             <boxGeometry args={[1.1, 1.1, 1.1]} />
             <meshBasicMaterial transparent opacity={0} />
           </mesh>
-          <Html center distanceFactor={8} position={[0, -0.2, 0]} style={{ color: '#94a3b8', fontSize: 10, pointerEvents: 'none' }}>
+           <Html center distanceFactor={8} position={[0, -0.2, 0]} style={{ color: '#aa9b92', fontSize: 10, pointerEvents: 'none' }}>
             drag ↓ · click to select
           </Html>
         </group>
@@ -180,7 +180,7 @@ interface QubitRailProps {
 const QubitRail: React.FC<QubitRailProps> = ({ index, qubitCount, timesteps }) => {
   const z = (index - (qubitCount - 1) / 2) * QUBIT_SPACING;
   const length = (timesteps + RAIL_LENGTH_OFFSET) * STEP_SPACING;
-  const colors = ['#6366f1', '#a855f7', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16'];
+   const colors = ['#8f102d', '#b76e79', '#d19b83', '#8aa58e', '#d8ad96', '#b94b5a', '#e4d5cc', '#9a7a6d'];
   return (
     <group>
       <mesh position={[0, 0, z]} rotation={[0, 0, Math.PI / 2]}>
@@ -193,7 +193,7 @@ const QubitRail: React.FC<QubitRailProps> = ({ index, qubitCount, timesteps }) =
           <meshStandardMaterial color={colors[index % colors.length]} emissive={colors[index % colors.length]} emissiveIntensity={0.4} />
         </mesh>
       ))}
-      <Html position={[-(length / 2) - 0.6, 0, z]} center distanceFactor={10} style={{ color: '#64748b', fontSize: 12, pointerEvents: 'none' }}>
+       <Html position={[-(length / 2) - 0.6, 0, z]} center distanceFactor={10} style={{ color: '#aa9b92', fontSize: 12, pointerEvents: 'none' }}>
         q<sub>{index}</sub>
       </Html>
     </group>
@@ -259,7 +259,7 @@ const DroppableFloor: React.FC<DroppableFloorProps> = ({ onDrop }) => {
       }}
     >
       <planeGeometry args={[width, depth]} />
-      <meshStandardMaterial transparent opacity={0.14} color="#1e293b" />
+       <meshStandardMaterial transparent opacity={0.14} color="#292122" />
     </mesh>
   );
 };
@@ -353,7 +353,7 @@ const CircuitScene3D: React.FC = () => {
           fov: 45
         }}
       >
-        <color attach="background" args={['#020617']} />
+         <color attach="background" args={['#0c0a0c']} />
         <ambientLight intensity={0.6} />
         <directionalLight position={[5, 8, 5]} intensity={0.7} castShadow />
 
@@ -362,10 +362,10 @@ const CircuitScene3D: React.FC = () => {
           args={[Math.max(18, bgWidth), Math.max(18, bgDepth)]}
           cellSize={1}
           cellThickness={0.4}
-          cellColor="#1e293b"
+           cellColor="#292122"
           sectionSize={5}
           sectionThickness={0.8}
-          sectionColor="#334155"
+           sectionColor="#554944"
           fadeDistance={40}
           fadeStrength={1}
           followCamera={false}
@@ -395,7 +395,7 @@ const CircuitScene3D: React.FC = () => {
 
         <mesh position={[cursorPosX, 0.05, cursorPosZ]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.38, 0.5, 32]} />
-          <meshBasicMaterial color="#6366f1" transparent opacity={0.85} side={THREE.DoubleSide} />
+           <meshBasicMaterial color="#8f102d" transparent opacity={0.85} side={THREE.DoubleSide} />
         </mesh>
 
         <OrbitControls

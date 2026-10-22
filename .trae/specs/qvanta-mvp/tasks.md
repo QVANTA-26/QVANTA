@@ -107,7 +107,7 @@
 - **Priority**: high
 - **Depends On**: Task 1
 - **Description**:
-  - **Current Scaffolding**: Vite + React 18 + TS + Tailwind. `App.tsx` React Router v6 with **8 lazy-loaded routes** + Suspense LoadingFallback + ProtectedRoute. Vite config proxies `/api` → `localhost:3000`, aliases workspaces to `@qvanta/types` and `@qvanta/ui` source. Zustand stores `auth.ts` + `ui.ts` with localStorage persistence. Layout components (TopBar/Sidebar) are responsive (mobile slide-in + backdrop). Sidebar gates Admin link by role.
+  - **Current Scaffolding**: Vite + React 18 + TS + Tailwind. `App.tsx` React Router v6 with **8 lazy-loaded routes** + Suspense LoadingFallback + ProtectedRoute. Vite config proxies `/api` → `localhost:3001`, aliases workspaces to `@qvanta/types` and `@qvanta/ui` source. Zustand stores `auth.ts` + `ui.ts` with localStorage persistence. Layout components (TopBar/Sidebar) are responsive (collapsible desktop rail + mobile slide-in + backdrop). Sidebar gates Admin link by role.
   - Remaining work completed: All 8 pages implemented and wired: `Login.tsx`, `Register.tsx`, `AuthGoogleCallback.tsx`, `Dashboard.tsx`, `CircuitBuilderPage.tsx`, `Tutor.tsx`, `Billing.tsx`, `AdminPage.tsx`. Dashboard fetches modules from `GET /lessons`, usage meter via `GET /users/me` (0/50 cap for Free), New Circuit button → `/circuit/new`. Billing page shows tier + portal button. Admin page shows `GET /admin/stats` + users table.
 - **Acceptance Criteria Addressed**: AC-2 (UI half), AC-7 (UI half), AC-9
 - **Test Requirements**:

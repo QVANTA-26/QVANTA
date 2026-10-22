@@ -1,11 +1,11 @@
 .landing-experience {
-  --landing-bg: #03030a;
-  --landing-ink: rgba(246, 244, 255, 0.96);
-  --landing-muted: rgba(193, 195, 230, 0.58);
-  --landing-subtle: rgba(151, 156, 202, 0.42);
-  --landing-violet: #8b6bff;
-  --landing-cyan: #34e0ff;
-  --landing-pink: #ec4899;
+  --landing-bg: #0b090a;
+  --landing-ink: rgba(255, 250, 247, 0.96);
+  --landing-muted: rgba(232, 219, 211, 0.66);
+  --landing-subtle: rgba(191, 164, 154, 0.48);
+  --landing-violet: #8f102d;
+  --landing-cyan: #e4d5cc;
+  --landing-pink: #b76e79;
   position: relative;
   display: block;
   width: 100%;
@@ -14,8 +14,8 @@
   overflow: hidden;
   isolation: isolate;
   background:
-    radial-gradient(circle at 50% 45%, rgba(38, 31, 98, 0.18), transparent 35rem),
-    radial-gradient(circle at 12% 12%, rgba(26, 114, 167, 0.08), transparent 28rem),
+    radial-gradient(circle at 50% 45%, rgba(109, 0, 26, 0.2), transparent 35rem),
+    radial-gradient(circle at 12% 12%, rgba(216, 173, 150, 0.08), transparent 28rem),
     var(--landing-bg);
   color: var(--landing-ink);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -32,14 +32,14 @@
 
 .landing-experience::before {
   background-image:
-    linear-gradient(rgba(139, 107, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(139, 107, 255, 0.035) 1px, transparent 1px);
+    linear-gradient(rgba(216, 173, 150, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 173, 150, 0.04) 1px, transparent 1px);
   background-size: 78px 78px;
   mask-image: radial-gradient(ellipse at center, black 0%, transparent 77%);
 }
 
 .landing-experience::after {
-  background: radial-gradient(ellipse at center, transparent 25%, rgba(1, 1, 7, 0.75) 100%);
+  background: radial-gradient(ellipse at center, transparent 25%, rgba(6, 4, 5, 0.8) 100%);
 }
 
 .landing-space,
@@ -58,7 +58,7 @@
 .landing-space__grid {
   position: absolute;
   inset: 9% 12%;
-  border: 1px solid rgba(139, 107, 255, 0.06);
+  border: 1px solid rgba(216, 173, 150, 0.08);
   border-radius: 50%;
   transform: perspective(680px) rotateX(64deg) scale(1.25);
   mask-image: linear-gradient(to bottom, transparent, black 36%, transparent 86%);
@@ -68,14 +68,14 @@
 .landing-space__grid::after {
   position: absolute;
   inset: 9%;
-  border: 1px solid rgba(52, 224, 255, 0.08);
+  border: 1px solid rgba(228, 213, 204, 0.08);
   border-radius: 50%;
   content: '';
 }
 
 .landing-space__grid::after {
   inset: 20%;
-  border-color: rgba(236, 72, 153, 0.07);
+  border-color: rgba(183, 110, 121, 0.08);
 }
 
 .landing-space__orb {
@@ -92,14 +92,14 @@
 .landing-space__orb--violet {
   top: 7%;
   left: 33%;
-  background: radial-gradient(circle, rgba(126, 87, 255, 0.7), transparent 66%);
+  background: radial-gradient(circle, rgba(109, 0, 26, 0.72), transparent 66%);
   animation: landing-drift 14s ease-in-out infinite alternate;
 }
 
 .landing-space__orb--cyan {
   right: -18%;
   bottom: -22%;
-  background: radial-gradient(circle, rgba(52, 224, 255, 0.56), transparent 67%);
+  background: radial-gradient(circle, rgba(216, 173, 150, 0.32), transparent 67%);
   animation: landing-drift 18s ease-in-out -5s infinite alternate-reverse;
 }
 
@@ -174,7 +174,7 @@
 .landing-lockup__mark {
   width: clamp(150px, 17vw, 240px);
   flex: 0 0 auto;
-  filter: drop-shadow(0 0 16px rgba(139, 107, 255, 0.58)) drop-shadow(0 0 36px rgba(52, 224, 255, 0.23));
+  filter: drop-shadow(0 0 16px rgba(109, 0, 26, 0.58)) drop-shadow(0 0 36px rgba(216, 173, 150, 0.2));
 }
 
 .landing-lockup__mark svg {
@@ -208,7 +208,7 @@
   font-weight: 200;
   letter-spacing: 0.28em;
   line-height: 1;
-  text-shadow: 0 0 14px rgba(139, 107, 255, 0.55), 0 0 40px rgba(34, 211, 238, 0.35);
+  text-shadow: 0 0 14px rgba(109, 0, 26, 0.55), 0 0 40px rgba(216, 173, 150, 0.24);
 }
 
 .landing-lockup__wordmark small {
@@ -254,7 +254,7 @@
 
 .landing-tagline__kicker b {
   padding: 0 0.55em;
-  color: rgba(52, 224, 255, 0.72);
+  color: rgba(216, 173, 150, 0.82);
   font-weight: 400;
 }
 
@@ -276,6 +276,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 14px;
   opacity: 0;
   pointer-events: none;
@@ -296,7 +297,7 @@
   justify-content: center;
   gap: 11px;
   padding: 0 22px;
-  border: 1px solid rgba(160, 130, 255, 0.35);
+  border: 1px solid rgba(216, 173, 150, 0.34);
   border-radius: 4px;
   color: rgba(245, 244, 255, 0.9);
   font-size: 11px;
@@ -312,14 +313,14 @@
 }
 
 .landing-action--primary {
-  background: linear-gradient(135deg, rgba(139, 107, 255, 0.22), rgba(52, 224, 255, 0.1));
-  box-shadow: 0 0 40px -10px rgba(139, 107, 255, 0.5), inset 0 1px rgba(255, 255, 255, 0.09);
+  background: linear-gradient(135deg, rgba(109, 0, 26, 0.48), rgba(216, 173, 150, 0.12));
+  box-shadow: 0 0 40px -10px rgba(109, 0, 26, 0.56), inset 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .landing-action--primary:hover {
-  border-color: rgba(190, 169, 255, 0.72);
-  background: linear-gradient(135deg, rgba(139, 107, 255, 0.38), rgba(52, 224, 255, 0.17));
-  box-shadow: 0 0 50px -6px rgba(139, 107, 255, 0.68), 0 0 100px -20px rgba(34, 211, 238, 0.5);
+  border-color: rgba(239, 205, 187, 0.8);
+  background: linear-gradient(135deg, rgba(109, 0, 26, 0.68), rgba(216, 173, 150, 0.2));
+  box-shadow: 0 0 50px -6px rgba(109, 0, 26, 0.72), 0 0 100px -20px rgba(216, 173, 150, 0.28);
 }
 
 .landing-action--quiet {
@@ -329,6 +330,18 @@
 
 .landing-action--quiet:hover {
   color: rgba(245, 244, 255, 0.95);
+}
+
+.landing-action--visual {
+  border-color: rgba(216, 173, 150, 0.28);
+  background: rgba(216, 173, 150, 0.06);
+  color: rgba(247, 241, 235, 0.86);
+}
+
+.landing-action--visual:hover {
+  border-color: rgba(216, 173, 150, 0.65);
+  background: rgba(216, 173, 150, 0.12);
+  box-shadow: 0 0 32px -12px rgba(216, 173, 150, 0.55);
 }
 
 .landing-arrow {
@@ -359,7 +372,7 @@
 
 .landing-footer b {
   padding: 0 0.7em;
-  color: rgba(52, 224, 255, 0.55);
+  color: rgba(216, 173, 150, 0.62);
   font-weight: 400;
 }
 
@@ -369,7 +382,7 @@
   left: 18px;
   z-index: 20;
   padding: 9px 13px;
-  border: 1px solid rgba(139, 107, 255, 0.5);
+  border: 1px solid rgba(216, 173, 150, 0.5);
   border-radius: 4px;
   background: rgba(8, 7, 22, 0.92);
   color: var(--landing-ink);

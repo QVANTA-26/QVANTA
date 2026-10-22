@@ -174,7 +174,7 @@ const BillingPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="relative border-primary-600/60 shadow-[0_0_0_1px_rgba(99,102,241,0.25)]">
+         <Card className="relative border-primary-600/60 shadow-[0_0_0_1px_rgba(109,0,26,0.3)]">
           <div className="absolute -top-2.5 left-4 rounded-full bg-primary-600 px-3 py-0.5 text-xs font-semibold text-white">POPULAR</div>
           <CardHeader>
             <div className="flex items-baseline justify-between">

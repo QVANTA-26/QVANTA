@@ -170,38 +170,46 @@ const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({ variant, shared }) =>
     try {
       let tries = 0;
       const res = await apiClient.post('/simulations', {
-        format: 'json_ast',
+        circuit_repr: {
+          kind: 'json_ast',
+          value: JSON.stringify(circuit),
+        },
         backend: 'qiskit_aer',
         shots: Math.max(1, Math.floor(shots)),
-        circuit: JSON.stringify(circuit),
       });
       let job = res.data;
+      const jobId = job?.job_id ?? job?.id;
       const pollMs = 300;
       const maxTries = 40;
       while (job?.status === 'queued' || job?.status === 'running') {
         if (++tries > maxTries) break;
         await new Promise((r) => setTimeout(r, pollMs));
         try {
+          if (!jobId) break;
           const j = await apiClient
-            .get(`/simulate/jobs/${job.id}`)
-            .catch(async () => apiClient.get(`/simulations/${job.id}`));
+            .get(`/simulate/jobs/${jobId}`)
+            .catch(async () => apiClient.get(`/simulations/${jobId}`));
           if (j?.data) job = j.data;
         } catch {
           break;
         }
       }
       if (job?.status === 'completed') {
-        const result = job.result ?? {};
+        const result = job.result ?? job;
         const counts: Record<string, number> = result.counts ?? {};
         const shotsVal =
-          Object.values(counts).reduce((a, b) => a + Number(b), 0) || shots;
+          Object.values(counts).reduce((a, b) => a + Number(b), 0) ||
+          result.shots ||
+          shots;
         const bloch = Array.isArray(result.blochVectors)
           ? result.blochVectors
-          : undefined;
+          : Array.isArray(result.per_qubit_bloch)
+            ? result.per_qubit_bloch
+            : undefined;
         onResult?.({
           counts,
           shots: shotsVal,
-          backend: 'qiskit_aer',
+          backend: result.backend ?? 'qiskit_aer',
           blochVectors: bloch,
         });
         pushStatus('done');

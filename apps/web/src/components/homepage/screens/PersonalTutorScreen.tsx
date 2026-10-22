@@ -87,8 +87,8 @@ const CallbackTorus: React.FC<CallbackTorusProps> = ({ sectionRef }) => {
     const posAttr = pts.geometry.attributes.position as THREE.BufferAttribute;
     const arr = posAttr.array as Float32Array;
     const color = (pts.material as THREE.PointsMaterial).color;
-    const violet = new THREE.Color('#8b6bff');
-    const cyan = new THREE.Color('#34e0ff');
+     const violet = new THREE.Color('#8f102d');
+     const cyan = new THREE.Color('#e4d5cc');
     for (let i = 0; i < activeCount; i++) {
       const i3 = i * 3;
       const delay = basePositions.delays[i];
@@ -130,7 +130,7 @@ const CallbackTorus: React.FC<CallbackTorusProps> = ({ sectionRef }) => {
         opacity={0.3}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
-        color="#8b6bff"
+         color="#8f102d"
       />
     </points>
   );
@@ -159,7 +159,7 @@ const PersonalTutorScreen: React.FC = () => {
         <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-bg-1/90 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-bg-1 via-bg-1/75 to-transparent" />
         <div className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2">
-          <div className="h-[420px] w-[420px] rounded-full bg-gradient-to-br from-violet/12 via-transparent to-cyan/10 blur-3xl" />
+           <div className="h-[420px] w-[420px] rounded-full bg-gradient-to-br from-primary-500/16 via-transparent to-accent-500/12 blur-3xl" />
         </div>
       </div>
 
@@ -196,9 +196,9 @@ const PersonalTutorScreen: React.FC = () => {
                 <span
                   className={`h-1.5 w-1.5 rounded-full ${
                     chip.color === 'violet'
-                      ? 'bg-violet shadow-[0_0_6px_rgba(139,107,255,0.8)]'
+                       ? 'bg-primary-500 shadow-[0_0_6px_rgba(109,0,26,0.8)]'
                       : chip.color === 'cyan'
-                        ? 'bg-cyan shadow-[0_0_6px_rgba(52,224,255,0.8)]'
+                         ? 'bg-accent-500 shadow-[0_0_6px_rgba(216,173,150,0.72)]'
                         : 'bg-ink/70'
                   }`}
                 />
@@ -215,8 +215,8 @@ const PersonalTutorScreen: React.FC = () => {
               size="lg"
               onClick={() => navigate('/register')}
               style={{
-                background: 'linear-gradient(135deg,#8b6bff 0%,#633dff 100%)',
-                boxShadow: '0 12px 48px -12px rgba(139,107,255,0.65)'
+                 background: 'linear-gradient(135deg,#6d001a 0%,#8f102d 100%)',
+                 boxShadow: '0 12px 48px -12px rgba(109,0,26,0.65)'
               }}
               className="!h-14 !px-9 !text-base"
             >

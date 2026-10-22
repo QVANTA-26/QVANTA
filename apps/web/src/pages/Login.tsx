@@ -3,12 +3,15 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import AuthForm from '@/components/auth/AuthForm';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { isLocalDevHost } from '@/lib/runtime';
+import { getSafeAuthRedirect } from '@/lib/auth-navigation';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [loading, setLoading] = React.useState(false);
+  const redirectPath = getSafeAuthRedirect(searchParams.get('next'));
   const [error, setError] = React.useState<string | null>(
     searchParams.get('oauth') === 'error' ? 'Google sign-in failed. Please try again.' : null
   );
@@ -18,14 +21,19 @@ const LoginPage: React.FC = () => {
     setError(null);
 
     try {
-      const response = await apiClient.post('/auth/login', values);
+      const response = await apiClient.post<{
+        user: Parameters<typeof setAuth>[0];
+        tokens: Parameters<typeof setAuth>[1];
+      }>('/auth/login', values);
+      if (!response.data.user || !response.data.tokens?.accessToken) {
+        throw new Error('The sign-in response was incomplete. Please try again.');
+      }
       setAuth(response.data.user, response.data.tokens);
-      navigate('/dashboard', { replace: true });
+      navigate(redirectPath, { replace: true });
       return;
     } catch (err: any) {
       const isLocalDevFallback =
-        typeof window !== 'undefined' &&
-        window.location.hostname === 'localhost' &&
+        isLocalDevHost() &&
         values.email.toLowerCase() === 'dev@qvanta.ai' &&
         values.password === 'dev-password';
 
@@ -45,11 +53,14 @@ const LoginPage: React.FC = () => {
           accessToken: 'dev-token',
           refreshToken: 'dev-refresh',
         });
-        navigate('/dashboard', { replace: true });
+        navigate(redirectPath, { replace: true });
         return;
       }
 
-      setError(err?.response?.data?.error?.message ?? 'Login failed');
+      setError(
+        err?.response?.data?.error?.message ??
+          (err?.response ? 'Login failed. Check your email and password.' : 'Unable to reach QVANTA. Check your connection and try again.')
+      );
     } finally {
       setLoading(false);
     }
@@ -59,7 +70,11 @@ const LoginPage: React.FC = () => {
     <AuthForm
       mode="login"
       title="Welcome back"
-      subtitle="Sign in to continue building quantum circuits, running simulations, and learning with your AI tutor."
+      subtitle={
+        redirectPath === '/learn'
+          ? 'Sign in to continue your guided quantum learning journey in the Learning Lab.'
+          : 'Sign in to continue building quantum circuits, running simulations, and learning with your AI tutor.'
+      }
       submitLabel="Sign in"
       onSubmit={handleSubmit}
       loading={loading}

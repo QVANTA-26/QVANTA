@@ -19,3 +19,7 @@ npm test
 ```
 
 Curriculum content is source-backed. If the canonical HTML changes, regenerate the checked-in JSON and review the resulting data change together with the source document.
+
+## Tutor handoff
+
+The module detail view stores the selected module's source text in the tutor handoff. The web tutor sends the title and a bounded (12,000-character maximum) context snapshot to `POST /tutor/chat`; the API validates that payload and uses it as reference material for both the connected Claude path and the offline canned-reply path. The source context is not treated as executable instructions.

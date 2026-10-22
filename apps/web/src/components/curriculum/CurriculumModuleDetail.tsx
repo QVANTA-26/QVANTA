@@ -7,6 +7,8 @@ import {
   type CurriculumModule,
   type CurriculumProgress,
 } from './curriculum';
+import CurriculumModuleVisual from './CurriculumModuleVisual';
+import CurriculumCircuitPreview from './CurriculumCircuitPreview';
 
 interface CurriculumModuleDetailProps {
   module: CurriculumModule;
@@ -17,6 +19,7 @@ interface CurriculumModuleDetailProps {
   onPrevious: () => void;
   onNext: () => void;
   onTutor: () => void;
+  onCircuit: () => void;
   hasPrevious: boolean;
   hasNext: boolean;
 }
@@ -68,6 +71,7 @@ const CurriculumModuleDetail: React.FC<CurriculumModuleDetailProps> = ({
   onPrevious,
   onNext,
   onTutor,
+  onCircuit,
   hasPrevious,
   hasNext,
 }) => {
@@ -101,9 +105,14 @@ const CurriculumModuleDetail: React.FC<CurriculumModuleDetailProps> = ({
                 <option value="completed">Completed</option>
               </select>
             </label>
-            <Button size="sm" onClick={onTutor}>
-              Discuss with AI Tutor
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" onClick={onTutor}>
+                Discuss with AI Tutor
+              </Button>
+              <Button size="sm" variant="secondary" onClick={onCircuit}>
+                Try a circuit
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -118,6 +127,18 @@ const CurriculumModuleDetail: React.FC<CurriculumModuleDetailProps> = ({
           </div>
         </div>
       </CardHeader>
+
+      <CurriculumModuleVisual
+        moduleNumber={sequenceIndex + 1}
+        title={module.title}
+        partTitle={module.partTitle}
+        level={module.level}
+      />
+
+      <CurriculumCircuitPreview
+        module={module}
+        onOpenBuilder={() => onCircuit()}
+      />
 
       <CardContent className="space-y-8 pt-6">
         {module.sections.map((section, sectionIndex) => (

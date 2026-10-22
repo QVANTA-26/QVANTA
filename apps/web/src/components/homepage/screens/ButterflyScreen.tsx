@@ -170,7 +170,7 @@ const ButterflyScreen: React.FC = () => {
 	  ctx.fillStyle = 'rgba(238,236,255,0.95)';
 	  ctx.textAlign = 'center';
 	  ctx.textBaseline = 'middle';
-	  ctx.shadowColor = 'rgba(139,107,255,0.9)';
+ 	  ctx.shadowColor = 'rgba(109,0,26,0.9)';
 	  ctx.shadowBlur = 18;
 	  ctx.fillText(str, 128, 48);
 	  return new THREE.CanvasTexture(cnv);

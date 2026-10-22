@@ -32,7 +32,7 @@ function Rail({ z }: { z: number }) {
     return new THREE.Line(
       geom,
       new THREE.LineBasicMaterial({
-        color: new THREE.Color('#9a96bd'),
+         color: new THREE.Color('#aa9b92'),
         transparent: true,
         opacity: 0.35
       })
@@ -44,8 +44,8 @@ function Rail({ z }: { z: number }) {
       <mesh position={[0, 0, z]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.018, 0.018, STEP_X[STEP_X.length - 1] - STEP_X[0] + 1.6, 16]} />
         <meshStandardMaterial
-          color="#1a1733"
-          emissive="#8b6bff"
+           color="#292122"
+           emissive="#8f102d"
           emissiveIntensity={0.05}
           metalness={0.3}
           roughness={0.6}
@@ -54,7 +54,7 @@ function Rail({ z }: { z: number }) {
       {STEP_X.map((x, i) => (
         <mesh key={i} position={[x, -0.03, z]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.05, 0.008, 6, 20]} />
-          <meshBasicMaterial color="#34e0ff" transparent opacity={0.22} />
+           <meshBasicMaterial color="#e4d5cc" transparent opacity={0.22} />
         </mesh>
       ))}
     </group>
@@ -77,8 +77,8 @@ function HGate({ x, z, phase }: { x: number; z: number; phase: number }) {
       <mesh ref={meshRef}>
         <boxGeometry args={[0.5, 0.5, 0.5]} />
         <meshStandardMaterial
-          color="#8b6bff"
-          emissive="#8b6bff"
+           color="#8f102d"
+           emissive="#8f102d"
           emissiveIntensity={0.5}
           metalness={0.2}
           roughness={0.3}
@@ -87,7 +87,7 @@ function HGate({ x, z, phase }: { x: number; z: number; phase: number }) {
       <Html position={[0, 0, 0.28]} center style={{ pointerEvents: 'none' }}>
         <div
           className="font-mono-quantum text-[18px] font-bold"
-          style={{ color: '#06050f', textShadow: '0 0 6px rgba(139,107,255,0.5)' }}
+           style={{ color: '#0d0b0c', textShadow: '0 0 6px rgba(109,0,26,0.5)' }}
         >
           H
         </div>
@@ -112,8 +112,8 @@ function XGate({ x, z, phase }: { x: number; z: number; phase: number }) {
       <mesh ref={meshRef}>
         <boxGeometry args={[0.5, 0.5, 0.5]} />
         <meshStandardMaterial
-          color="#a855f7"
-          emissive="#a855f7"
+           color="#b76e79"
+           emissive="#b76e79"
           emissiveIntensity={0.5}
           metalness={0.2}
           roughness={0.3}
@@ -167,8 +167,8 @@ function CNOTGate({
       <mesh ref={controlRef} position={[x, 0, controlZ]}>
         <sphereGeometry args={[0.08, 18, 18]} />
         <meshStandardMaterial
-          color="#f59e0b"
-          emissive="#f59e0b"
+           color="#d19b83"
+           emissive="#d19b83"
           emissiveIntensity={0.6}
           metalness={0.4}
           roughness={0.25}
@@ -176,7 +176,7 @@ function CNOTGate({
       </mesh>
       <lineSegments ref={linkRef as any} geometry={linkGeom}>
         <lineBasicMaterial
-          color="#f59e0b"
+           color="#d19b83"
           transparent
           opacity={0.55}
           depthWrite={false}
@@ -186,8 +186,8 @@ function CNOTGate({
       <mesh ref={targetRef} position={[x, 0, targetZ]}>
         <cylinderGeometry args={[0.26, 0.26, 0.22, 22]} />
         <meshStandardMaterial
-          color="#34e0ff"
-          emissive="#34e0ff"
+           color="#e4d5cc"
+           emissive="#e4d5cc"
           emissiveIntensity={0.45}
           metalness={0.2}
           roughness={0.35}
@@ -195,7 +195,7 @@ function CNOTGate({
       </mesh>
       <mesh position={[x, 0.23, targetZ]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.2, 0.025, 8, 28]} />
-        <meshBasicMaterial color="#34e0ff" transparent opacity={0.7} />
+         <meshBasicMaterial color="#e4d5cc" transparent opacity={0.7} />
       </mesh>
     </group>
   );
@@ -215,8 +215,8 @@ function MeasureGate({ x, z, phase }: { x: number; z: number; phase: number }) {
       <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.3, 0.3, 0.08, 28]} />
         <meshStandardMaterial
-          color="#13102a"
-          emissive="#34e0ff"
+           color="#292122"
+           emissive="#e4d5cc"
           emissiveIntensity={0.3}
           metalness={0.5}
           roughness={0.35}
@@ -226,12 +226,12 @@ function MeasureGate({ x, z, phase }: { x: number; z: number; phase: number }) {
       </mesh>
       <mesh position={[0, 0.06, z]}>
         <ringGeometry args={[0.22, 0.26, 32]} />
-        <meshBasicMaterial color="#34e0ff" transparent opacity={0.55} side={THREE.DoubleSide} />
+         <meshBasicMaterial color="#e4d5cc" transparent opacity={0.55} side={THREE.DoubleSide} />
       </mesh>
       <Html position={[0, 0.02, 0.26]} center style={{ pointerEvents: 'none' }}>
         <div
           className="font-mono-quantum text-[11px]"
-          style={{ color: '#34e0ff', letterSpacing: '0.04em' }}
+           style={{ color: '#e4d5cc', letterSpacing: '0.04em' }}
         >
           M
         </div>
@@ -274,7 +274,7 @@ function EntanglementLink({
     const line = new THREE.Line(
       geom,
       new THREE.LineBasicMaterial({
-        color: new THREE.Color('#8b6bff'),
+         color: new THREE.Color('#8f102d'),
         transparent: true,
         opacity: 0.4,
         depthWrite: false,
@@ -311,26 +311,26 @@ const CircuitScene: React.FC = () => {
 
 const CYCLE_TOTAL = 10;
 const PHASES: Array<{ end: number; target: THREE.Vector3; color: THREE.Color; label: string }> = [
-  { end: 2, target: new THREE.Vector3(0, 0, 1.15), color: new THREE.Color('#34e0ff'), label: '|0⟩' },
+   { end: 2, target: new THREE.Vector3(0, 0, 1.15), color: new THREE.Color('#e4d5cc'), label: '|0⟩' },
   {
     end: 4.5,
     target: new THREE.Vector3(1.15, 0, 0),
-    color: new THREE.Color('#8b6bff'),
+     color: new THREE.Color('#8f102d'),
     label: 'H → |+⟩'
   },
   {
     end: 7,
     target: new THREE.Vector3(-1.15, 0, 0),
-    color: new THREE.Color('#34e0ff'),
+     color: new THREE.Color('#e4d5cc'),
     label: 'X → |−⟩'
   },
   {
     end: 9,
     target: new THREE.Vector3(0, 0, 1.15),
-    color: new THREE.Color('#8b6bff'),
+     color: new THREE.Color('#8f102d'),
     label: 'H → |0⟩'
   },
-  { end: 10, target: new THREE.Vector3(0, 0, 1.15), color: new THREE.Color('#34e0ff'), label: '|0⟩ rest' }
+   { end: 10, target: new THREE.Vector3(0, 0, 1.15), color: new THREE.Color('#e4d5cc'), label: '|0⟩ rest' }
 ];
 
 function phaseFor(t: number) {
@@ -345,7 +345,7 @@ function vectorAndColorForTime(rawT: number, reduced: boolean) {
     const midVec = new THREE.Vector3(1.15, 0, 0).multiplyScalar(0.55).add(new THREE.Vector3(0, 0, 0.58));
     return {
       vec: midVec,
-      color: new THREE.Color('#8b6bff'),
+       color: new THREE.Color('#8f102d'),
       phaseIndex: 1,
       phaseProgress: 0.5
     };
@@ -380,7 +380,7 @@ const BlochShowcaseScene: React.FC = () => {
     return new THREE.Line(
       shaftGeom,
       new THREE.LineBasicMaterial({
-        color: new THREE.Color('#34e0ff'),
+         color: new THREE.Color('#e4d5cc'),
         linewidth: 3,
         transparent: true,
         opacity: 0.95
@@ -421,7 +421,7 @@ const BlochShowcaseScene: React.FC = () => {
   const equatorLine = React.useMemo(() => {
     return new THREE.Line(
       equatorGeom,
-      new THREE.LineBasicMaterial({ color: new THREE.Color('#9a96bd'), transparent: true, opacity: 0.22 })
+       new THREE.LineBasicMaterial({ color: new THREE.Color('#aa9b92'), transparent: true, opacity: 0.22 })
     );
   }, [equatorGeom]);
   const meridianGeom = React.useMemo(() => {
@@ -435,7 +435,7 @@ const BlochShowcaseScene: React.FC = () => {
   const meridianLine = React.useMemo(() => {
     return new THREE.Line(
       meridianGeom,
-      new THREE.LineBasicMaterial({ color: new THREE.Color('#9a96bd'), transparent: true, opacity: 0.18 })
+       new THREE.LineBasicMaterial({ color: new THREE.Color('#aa9b92'), transparent: true, opacity: 0.18 })
     );
   }, [meridianGeom]);
   const axisXGeom = React.useMemo(
@@ -449,7 +449,7 @@ const BlochShowcaseScene: React.FC = () => {
   const axisXLine = React.useMemo(() => {
     return new THREE.Line(
       axisXGeom,
-      new THREE.LineBasicMaterial({ color: new THREE.Color('#9a96bd'), transparent: true, opacity: 0.3 })
+       new THREE.LineBasicMaterial({ color: new THREE.Color('#aa9b92'), transparent: true, opacity: 0.3 })
     );
   }, [axisXGeom]);
   const axisZGeom = React.useMemo(
@@ -463,7 +463,7 @@ const BlochShowcaseScene: React.FC = () => {
   const axisZLine = React.useMemo(() => {
     return new THREE.Line(
       axisZGeom,
-      new THREE.LineBasicMaterial({ color: new THREE.Color('#9a96bd'), transparent: true, opacity: 0.3 })
+       new THREE.LineBasicMaterial({ color: new THREE.Color('#aa9b92'), transparent: true, opacity: 0.3 })
     );
   }, [axisZGeom]);
   return (
@@ -473,7 +473,7 @@ const BlochShowcaseScene: React.FC = () => {
         <mesh>
           <sphereGeometry args={[1.15, 40, 24]} />
           <meshStandardMaterial
-            color="#0a0918"
+             color="#151112"
             transparent
             opacity={0.22}
             side={THREE.BackSide}
@@ -484,7 +484,7 @@ const BlochShowcaseScene: React.FC = () => {
         <mesh>
           <sphereGeometry args={[1.15, 40, 24]} />
           <meshBasicMaterial
-            color="#8b6bff"
+             color="#8f102d"
             wireframe
             transparent
             opacity={0.16}
@@ -499,30 +499,30 @@ const BlochShowcaseScene: React.FC = () => {
         <mesh ref={tipRef}>
           <coneGeometry args={[0.07, 0.18, 18]} />
           <meshStandardMaterial
-            color="#34e0ff"
-            emissive="#34e0ff"
+             color="#e4d5cc"
+             emissive="#e4d5cc"
             emissiveIntensity={0.7}
             metalness={0.15}
             roughness={0.3}
           />
         </mesh>
         <Html position={[0, 1.55, 0]} center style={{ pointerEvents: 'none' }}>
-          <div className="font-mono-quantum text-[13px] font-semibold" style={{ color: '#34e0ff' }}>
+           <div className="font-mono-quantum text-[13px] font-semibold" style={{ color: '#e4d5cc' }}>
             |0⟩
           </div>
         </Html>
         <Html position={[0, -1.55, 0]} center style={{ pointerEvents: 'none' }}>
-          <div className="font-mono-quantum text-[13px] font-semibold" style={{ color: '#8b6bff' }}>
+           <div className="font-mono-quantum text-[13px] font-semibold" style={{ color: '#8f102d' }}>
             |1⟩
           </div>
         </Html>
         <Html position={[1.55, 0, 0]} center style={{ pointerEvents: 'none' }}>
-          <div className="font-mono-quantum text-[11px]" style={{ color: '#9a96bd' }}>
+             <div className="font-mono-quantum text-[11px]" style={{ color: '#aa9b92' }}>
             x
           </div>
         </Html>
         <Html position={[0, 0, -1.55]} center style={{ pointerEvents: 'none' }}>
-          <div className="font-mono-quantum text-[11px]" style={{ color: '#9a96bd' }}>
+             <div className="font-mono-quantum text-[11px]" style={{ color: '#aa9b92' }}>
             y
           </div>
         </Html>
@@ -579,7 +579,7 @@ const CircuitBlochScreen: React.FC = () => {
 
         <div className="relative grid grid-cols-1 items-stretch gap-8 lg:grid-cols-2 lg:gap-14">
           <div className="flex flex-col">
-            <div className="group relative overflow-hidden rounded-2xl border border-white/5 bg-bg-2/60 shadow-[0_22px_70px_-24px_rgba(139,107,255,0.38)] backdrop-blur-sm">
+             <div className="group relative overflow-hidden rounded-2xl border border-white/5 bg-bg-2/60 shadow-[0_22px_70px_-24px_rgba(109,0,26,0.38)] backdrop-blur-sm">
               <WindowChrome label="circuit.3d" />
               <div className="relative h-[480px] w-full">
                 <Canvas
@@ -613,12 +613,12 @@ const CircuitBlochScreen: React.FC = () => {
                     markerHeight="6"
                     orient="auto-start-reverse"
                   >
-                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b6bff" />
+                     <path d="M 0 0 L 10 5 L 0 10 z" fill="#8f102d" />
                   </marker>
                 </defs>
                 <path
                   d="M 140 60 C 130 20 80 10 20 10"
-                  stroke="#8b6bff"
+                   stroke="#8f102d"
                   strokeWidth="1.6"
                   fill="none"
                   strokeLinecap="round"
@@ -626,7 +626,7 @@ const CircuitBlochScreen: React.FC = () => {
                   style={{ opacity: 0.85 }}
                 />
               </svg>
-              <div className="ml-2 rounded-lg border border-violet/20 bg-violet/8 px-3 py-1.5 backdrop-blur-sm">
+                 <div className="ml-2 rounded-lg border border-primary-500/20 bg-primary-500/8 px-3 py-1.5 backdrop-blur-sm">
                 <div className="font-display text-sm font-semibold text-ink">3D circuit</div>
                 <div className="font-mono-quantum text-[10px] tracking-wider text-ink-dim/80">
                   drag · drop · run
@@ -636,7 +636,7 @@ const CircuitBlochScreen: React.FC = () => {
           </div>
 
           <div className="flex flex-col">
-            <div className="group relative overflow-hidden rounded-2xl border border-white/5 bg-bg-2/60 shadow-[0_22px_70px_-24px_rgba(52,224,255,0.32)] backdrop-blur-sm">
+             <div className="group relative overflow-hidden rounded-2xl border border-white/5 bg-bg-2/60 shadow-[0_22px_70px_-24px_rgba(216,173,150,0.24)] backdrop-blur-sm">
               <WindowChrome label="bloch.vector · q₀" />
               <div className="relative h-[480px] w-full">
                 <Canvas
@@ -652,7 +652,7 @@ const CircuitBlochScreen: React.FC = () => {
               </div>
             </div>
             <div className="relative mt-4 flex items-start justify-end pr-4">
-              <div className="mr-2 rounded-lg border border-cyan/20 bg-cyan/8 px-3 py-1.5 text-right backdrop-blur-sm">
+               <div className="mr-2 rounded-lg border border-accent-500/20 bg-accent-500/8 px-3 py-1.5 text-right backdrop-blur-sm">
                 <div className="font-display text-sm font-semibold text-ink">Vector formation</div>
                 <div className="font-mono-quantum text-[10px] tracking-wider text-ink-dim/80">
                   H · X · H cycle
@@ -677,12 +677,12 @@ const CircuitBlochScreen: React.FC = () => {
                     markerHeight="6"
                     orient="auto-start-reverse"
                   >
-                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#34e0ff" />
+                     <path d="M 0 0 L 10 5 L 0 10 z" fill="#e4d5cc" />
                   </marker>
                 </defs>
                 <path
                   d="M 140 60 C 130 20 80 10 20 10"
-                  stroke="#34e0ff"
+                   stroke="#e4d5cc"
                   strokeWidth="1.6"
                   fill="none"
                   strokeLinecap="round"
@@ -696,15 +696,15 @@ const CircuitBlochScreen: React.FC = () => {
 
         <div className="mx-auto mt-14 flex max-w-2xl flex-wrap items-center justify-center gap-x-6 gap-y-3 text-center">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-violet shadow-[0_0_8px_rgba(139,107,255,0.8)]" />
+             <span className="h-2 w-2 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(109,0,26,0.8)]" />
             <span className="font-mono-quantum text-[11px] tracking-wider text-ink-dim">
-              violet = superposition
+               burgundy = superposition
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-cyan shadow-[0_0_8px_rgba(52,224,255,0.8)]" />
+             <span className="h-2 w-2 rounded-full bg-accent-500 shadow-[0_0_8px_rgba(216,173,150,0.7)]" />
             <span className="font-mono-quantum text-[11px] tracking-wider text-ink-dim">
-              cyan = collapsed / measured
+               ivory = collapsed / measured
             </span>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Landing, { type LandingPhase } from '@/components/Landing';
+import LegalLinks from '@/components/landing/LegalLinks';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 const LandingPage = () => {
@@ -28,7 +29,12 @@ const LandingPage = () => {
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [reducedMotion]);
 
-  return <Landing phase={phase} reducedMotion={reducedMotion} />;
+  return (
+    <>
+      <Landing phase={phase} reducedMotion={reducedMotion} />
+      <LegalLinks />
+    </>
+  );
 };
 
 export default LandingPage;

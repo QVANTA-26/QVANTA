@@ -17,7 +17,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   error:
     "bg-red-500/15 text-red-400 border-red-500/30",
   primary:
-    "bg-primary-500/15 text-primary-300 border-primary-500/30",
+    "bg-primary-500/15 text-primary-200 border-primary-400/30",
   secondary:
     "bg-bg-800 text-text-300 border-bg-700",
   destructive:

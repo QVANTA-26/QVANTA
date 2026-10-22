@@ -38,6 +38,38 @@ const IconClose: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
+const IconChevronLeft: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+
+const IconChevronRight: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
+
 const IconLogout: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -80,6 +112,8 @@ const TopBar: React.FC = () => {
   const toggleLite2D = useUIStore((s) => s.toggleLite2D);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
+  const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed);
+  const toggleSidebarCollapsed = useUIStore((s) => s.toggleSidebarCollapsed);
 
   const handleLogout = () => {
     logout();
@@ -87,7 +121,23 @@ const TopBar: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-bg-800 bg-bg-950/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-bg-950/60 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-bg-800 bg-[linear-gradient(90deg,rgba(12,10,12,0.96),rgba(39,15,22,0.9),rgba(12,10,12,0.96))] px-4 shadow-[0_8px_28px_rgba(0,0,0,0.16)] backdrop-blur supports-[backdrop-filter]:bg-bg-950/80 sm:px-6">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="hidden w-8 px-0 lg:inline-flex"
+        onClick={toggleSidebarCollapsed}
+        aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-expanded={!sidebarCollapsed}
+        title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        {sidebarCollapsed ? (
+          <IconChevronRight className="h-5 w-5" />
+        ) : (
+          <IconChevronLeft className="h-5 w-5" />
+        )}
+      </Button>
+
       <Button
         variant="ghost"
         size="sm"
@@ -107,10 +157,6 @@ const TopBar: React.FC = () => {
         <span className="text-sm font-semibold text-text-100 sm:hidden">
           QVANTA
         </span>
-        <div className="hidden items-center gap-2 sm:flex">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-          <span className="text-xs text-text-500">Systems operational</span>
-        </div>
       </div>
 
       <div className="flex items-center gap-2">
@@ -126,7 +172,7 @@ const TopBar: React.FC = () => {
         </Button>
 
         <div className="hidden items-center gap-2 rounded-full bg-bg-900 px-3 py-1.5 sm:flex">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-accent-500 text-[11px] font-semibold text-white">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500 text-[11px] font-semibold text-white shadow-[0_0_16px_rgba(109,0,26,0.35)]">
             {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
           </div>
           <span className="max-w-[140px] truncate text-xs font-medium text-text-200">
@@ -151,6 +197,20 @@ const MobileSidebar: React.FC = () => {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const setSidebarOpen = useUIStore((s) => s.setSidebarOpen);
 
+  React.useEffect(() => {
+    if (!sidebarOpen) return undefined;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [sidebarOpen, setSidebarOpen]);
+
   if (!sidebarOpen) return null;
 
   return (
@@ -166,17 +226,50 @@ const MobileSidebar: React.FC = () => {
         aria-modal="true"
         aria-label="Navigation menu"
       >
-        <Sidebar />
+        <Sidebar mobile onNavigate={() => setSidebarOpen(false)} />
       </div>
     </>
   );
 };
 
 const Layout: React.FC = () => {
+  const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed);
+  const toggleSidebarCollapsed = useUIStore((s) => s.toggleSidebarCollapsed);
+
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key === '\\' &&
+        !event.altKey
+      ) {
+        const target = event.target;
+        if (
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement ||
+          (target instanceof HTMLElement && target.isContentEditable)
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+        toggleSidebarCollapsed();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleSidebarCollapsed]);
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-bg-950 text-text-100">
-      <aside className="hidden shrink-0 lg:block">
-        <Sidebar />
+      <aside
+        className={`hidden h-full shrink-0 transition-[width] duration-300 ease-in-out motion-reduce:transition-none lg:block ${
+          sidebarCollapsed ? 'w-[4.5rem]' : 'w-64'
+        }`}
+      >
+        <Sidebar collapsed={sidebarCollapsed} />
       </aside>
 
       <MobileSidebar />
