@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="QVANTA - Learn quantum computing by building it" xmlns:c2pa="http://c2pa.org/manifest">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1117"/>
+      <stop offset="0.55" stop-color="#140a12"/>
+      <stop offset="1" stop-color="#1f0b17"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff2d55"/>
+      <stop offset="1" stop-color="#ff7ab8"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.2" cy="0.5" r="0.7">
+      <stop offset="0" stop-color="#e11d48" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#e11d48" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M30 0H0V30" fill="none" stroke="#ff2d55" stroke-opacity="0.07" stroke-width="1"/>
+    </pattern>
+    <filter id="blur"><feGaussianBlur stdDeviation="4"/></filter>
+    <radialGradient id="sph" cx="0.35" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#ffd6e6"/>
+      <stop offset="0.45" stop-color="#ff5c8f"/>
+      <stop offset="1" stop-color="#b3123f"/>
+    </radialGradient>
+    <radialGradient id="boardglow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#e11d48" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#e11d48" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur3" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+
+  <rect width="1200" height="320" rx="14" fill="url(#bg)"/>
+  <rect width="1200" height="320" rx="14" fill="url(#grid)"/>
+  <rect width="1200" height="320" rx="14" fill="url(#glow)"/>
+
+  <!-- scan line -->
+  <rect x="0" y="0" width="2" height="320" fill="#ff2d55" opacity="0.35">
+    <animate attributeName="x" values="0;1200;0" dur="9s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- HUD corner brackets -->
+  <g fill="none" stroke="#ff2d55" stroke-width="2.5" stroke-linecap="round">
+    <path d="M22 54V22H54"/>
+    <path d="M1146 22H1178V54"/>
+    <path d="M22 266V298H54"/>
+    <path d="M1146 298H1178V266"/>
+  </g>
+
+  <!-- top micro text -->
+  <g font-family="'Courier New',Courier,monospace" font-size="11" fill="#ff7ab8" opacity="0.8" letter-spacing="2">
+    <text x="70" y="42">SYS://QVANTA.CORE</text>
+    <text x="1130" y="42" text-anchor="end">STATE |ψ⟩ = (|00⟩ + |11⟩) / √2</text>
+  </g>
+
+  <!-- title -->
+  <g>
+    <text x="68" y="168" font-family="'Segoe UI',Arial,Helvetica,sans-serif" font-size="108" font-weight="800" letter-spacing="10" fill="#ff2d55" opacity="0.5" filter="url(#blur)">QVANTA</text>
+    <text x="68" y="168" font-family="'Segoe UI',Arial,Helvetica,sans-serif" font-size="108" font-weight="800" letter-spacing="10" fill="url(#title)">QVANTA</text>
+  </g>
+  <text x="72" y="208" font-family="'Courier New',Courier,monospace" font-size="17" fill="#e6edf3" letter-spacing="4">LEARN QUANTUM COMPUTING BY BUILDING IT</text>
+  <g font-family="'Courier New',Courier,monospace" font-size="12" fill="#ff7ab8" letter-spacing="2">
+    <text x="72" y="248">▸ 3D CIRCUITS  ▸ QISKIT AER  ▸ BLOCH SPHERES  ▸ AI TUTOR</text>
+  </g>
+
+  <!-- circuit panel (3D) -->
+  <g>
+    <rect x="690" y="58" width="450" height="218" rx="10" fill="#0d1117" fill-opacity="0.6" stroke="#ff2d55" stroke-opacity="0.35"/>
+    <ellipse cx="916" cy="196" rx="235" ry="82" fill="url(#boardglow)"/>
+    <polygon points="774.4,252.2 1116.4,216.2 1116.4,225.2 774.4,261.2" fill="#3a1226" stroke="#ff2d55" stroke-opacity=".5"/>
+    <polygon points="716.0,150.0 774.4,252.2 774.4,261.2 716.0,159.0" fill="#240b18" stroke="#ff2d55" stroke-opacity=".5"/>
+    <polygon points="716.0,150.0 1058.0,114.0 1116.4,216.2 774.4,252.2" fill="#14090f" stroke="#ff2d55" stroke-opacity=".7" stroke-width="1.2"/>
+    <g stroke="#ff2d55" stroke-opacity=".16" stroke-width="1"><line x1="754.0" y1="146.0" x2="812.4" y2="248.2"/><line x1="792.0" y1="142.0" x2="850.4" y2="244.2"/><line x1="830.0" y1="138.0" x2="888.4" y2="240.2"/><line x1="868.0" y1="134.0" x2="926.4" y2="236.2"/><line x1="906.0" y1="130.0" x2="964.4" y2="232.2"/><line x1="944.0" y1="126.0" x2="1002.4" y2="228.2"/><line x1="982.0" y1="122.0" x2="1040.4" y2="224.2"/><line x1="1020.0" y1="118.0" x2="1078.4" y2="220.2"/><line x1="725.6" y1="166.8" x2="1067.6" y2="130.8"/><line x1="735.2" y1="183.6" x2="1077.2" y2="147.6"/><line x1="744.8" y1="200.4" x2="1086.8" y2="164.4"/><line x1="754.4" y1="217.2" x2="1096.4" y2="181.2"/><line x1="764.0" y1="234.0" x2="1106.0" y2="198.0"/><line x1="773.6" y1="250.8" x2="1115.6" y2="214.8"/></g>
+    <text x="715.8" y="165.9" text-anchor="end" font-family="'Courier New',monospace" font-size="13" fill="#ff7ab8">q0</text>
+    <text x="738.1" y="205.1" text-anchor="end" font-family="'Courier New',monospace" font-size="13" fill="#ff7ab8">q1</text>
+    <text x="760.6" y="244.3" text-anchor="end" font-family="'Courier New',monospace" font-size="13" fill="#ff7ab8">q2</text>
+    <line x1="722.4" y1="158.2" x2="1064.4" y2="122.2" stroke="#2b3038" stroke-width="5.5" stroke-linecap="round"/>
+    <line x1="722.4" y1="157.0" x2="1064.4" y2="121.0" stroke="#8b949e" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="744.8" y1="197.4" x2="1086.8" y2="161.4" stroke="#2b3038" stroke-width="5.5" stroke-linecap="round"/>
+    <line x1="744.8" y1="196.2" x2="1086.8" y2="160.2" stroke="#8b949e" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="767.2" y1="236.6" x2="1109.2" y2="200.6" stroke="#2b3038" stroke-width="5.5" stroke-linecap="round"/>
+    <line x1="767.2" y1="235.4" x2="1109.2" y2="199.4" stroke="#8b949e" stroke-width="1.6" stroke-linecap="round"/>
+    <circle r="4.5" fill="url(#sph)"><animateMotion dur="3.4s" begin="0.0s" repeatCount="indefinite" path="M722.4 153.2 L1064.4 117.2"/><animate attributeName="opacity" values="0;1;1;0" dur="3.4s" begin="0.0s" repeatCount="indefinite"/></circle>
+    <circle r="4.5" fill="url(#sph)"><animateMotion dur="3.4s" begin="1.0s" repeatCount="indefinite" path="M744.8 192.4 L1086.8 156.4"/><animate attributeName="opacity" values="0;1;1;0" dur="3.4s" begin="1.0s" repeatCount="indefinite"/></circle>
+    <circle r="4.5" fill="url(#sph)"><animateMotion dur="3.4s" begin="2.0s" repeatCount="indefinite" path="M767.2 231.6 L1109.2 195.6"/><animate attributeName="opacity" values="0;1;1;0" dur="3.4s" begin="2.0s" repeatCount="indefinite"/></circle>
+    <polygon points="755.1,153.0 779.9,150.4 790.2,168.6 765.5,171.2" fill="#000" opacity="0.45"/>
+    <g><polygon points="747.6,140.9 758.0,159.1 758.0,137.1 747.6,118.9" fill="#8f1237" fill-opacity="1"/><polygon points="758.0,159.1 782.7,156.5 782.7,134.5 758.0,137.1" fill="#e11d48" fill-opacity="1"/><polygon points="747.6,118.9 772.3,116.3 782.7,134.5 758.0,137.1" fill="#ff7a9b" fill-opacity="1"/><text transform="matrix(0.95 -0.1 0 1 758.0 159.1)" x="13.0" y="-5.6" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="15" font-weight="800" fill="#fff">H</text><animateTransform attributeName="transform" type="translate" values="0 0;0 -2.5;0 0" dur="3.0s" begin="0s" repeatCount="indefinite"/></g>
+    <line x1="864.9" y1="130.2" x2="887.3" y2="169.4" stroke="#ff7ab8" stroke-width="3" stroke-linecap="round"/>
+    <polygon points="863.0,146.1 876.3,144.7 881.9,154.5 868.6,155.9" fill="#000" opacity="0.4"/>
+    <g><circle cx="864.9" cy="130.2" r="11.5" fill="#ff2d55" opacity=".25" filter="url(#blur3)"/><circle cx="864.9" cy="130.2" r="7.5" fill="url(#sph)"/><animateTransform attributeName="transform" type="translate" values="0 0;0 -2.5;0 0" dur="3.0s" begin="0.4s" repeatCount="indefinite"/></g>
+    <polygon points="926.1,135.0 950.9,132.4 961.2,150.6 936.5,153.2" fill="#000" opacity="0.45"/>
+    <g><polygon points="918.6,122.9 929.0,141.1 929.0,119.1 918.6,100.9" fill="#9aa4b2" fill-opacity="0.28" stroke="#ffffff" stroke-width="1.2"/><polygon points="929.0,141.1 953.7,138.5 953.7,116.5 929.0,119.1" fill="#e6edf3" fill-opacity="0.28" stroke="#ffffff" stroke-width="1.2"/><polygon points="918.6,100.9 943.3,98.3 953.7,116.5 929.0,119.1" fill="#ffffff" fill-opacity="0.43000000000000005" stroke="#ffffff" stroke-width="1.2"/><g transform="matrix(0.95 -0.1 0 1 929.0 141.1)" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"><path d="M5.0 -6.0A8 8 0 0 1 21.0 -6.0"/><path d="M13.0 -6.0L18.5 -16.0"/></g><animateTransform attributeName="transform" type="translate" values="0 0;0 -2.5;0 0" dur="3.0s" begin="0.8s" repeatCount="indefinite"/></g>
+    <polygon points="984.9,130.3 1007.7,127.9 1016.5,143.3 993.7,145.7" fill="#000" opacity="0.4"/>
+    <g><polygon points="977.3,123.2 986.1,138.6 986.1,100.6 977.3,85.2" fill="#8f1237" fill-opacity="1"/><polygon points="986.1,138.6 1008.9,136.2 1008.9,98.2 986.1,100.6" fill="#e11d48" fill-opacity="1"/><polygon points="977.3,85.2 1000.1,82.8 1008.9,98.2 986.1,100.6" fill="#ff9bc4" fill-opacity="1"/></g>
+    <text x="993.1" y="84.7" text-anchor="middle" font-family="'Courier New',monospace" font-size="11" font-weight="700" fill="#ff7ab8">00 · 50%</text>
+    <polygon points="877.3,181.7 902.0,179.1 912.4,197.3 887.7,199.9" fill="#000" opacity="0.5"/>
+    <circle r="12.5" transform="matrix(0.95 -0.1 0.4 0.7 887.3 182.4)" fill="#7a1e45"/><circle r="12.5" transform="matrix(0.95 -0.1 0.4 0.7 887.3 180.4)" fill="#7a1e45"/><circle r="12.5" transform="matrix(0.95 -0.1 0.4 0.7 887.3 178.4)" fill="#7a1e45"/><circle r="12.5" transform="matrix(0.95 -0.1 0.4 0.7 887.3 176.4)" fill="#7a1e45"/><circle r="12.5" transform="matrix(0.95 -0.1 0.4 0.7 887.3 174.4)" fill="#7a1e45"/><circle r="12.5" transform="matrix(0.95 -0.1 0.4 0.7 887.3 172.4)" fill="#7a1e45"/><circle r="12.5" transform="matrix(0.95 -0.1 0.4 0.7 887.3 171.4)" fill="#1a0b14" stroke="#ff7ab8" stroke-width="1.8"/><path d="M-12.5 0H12.5M0 -12.5V12.5" transform="matrix(0.95 -0.1 0.4 0.7 887.3 171.4)" stroke="#ff7ab8" stroke-width="2" fill="none"/>
+    <polygon points="948.5,174.2 973.2,171.6 983.6,189.8 958.9,192.4" fill="#000" opacity="0.45"/>
+    <g><polygon points="941.0,162.1 951.4,180.3 951.4,158.3 941.0,140.1" fill="#9aa4b2" fill-opacity="0.28" stroke="#ffffff" stroke-width="1.2"/><polygon points="951.4,180.3 976.1,177.7 976.1,155.7 951.4,158.3" fill="#e6edf3" fill-opacity="0.28" stroke="#ffffff" stroke-width="1.2"/><polygon points="941.0,140.1 965.7,137.5 976.1,155.7 951.4,158.3" fill="#ffffff" fill-opacity="0.43000000000000005" stroke="#ffffff" stroke-width="1.2"/><g transform="matrix(0.95 -0.1 0 1 951.4 180.3)" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"><path d="M5.0 -6.0A8 8 0 0 1 21.0 -6.0"/><path d="M13.0 -6.0L18.5 -16.0"/></g><animateTransform attributeName="transform" type="translate" values="0 0;0 -2.5;0 0" dur="3.0s" begin="1.2s" repeatCount="indefinite"/></g>
+    <polygon points="1045.3,165.5 1068.1,163.1 1076.9,178.5 1054.1,180.9" fill="#000" opacity="0.4"/>
+    <g><polygon points="1037.8,158.4 1046.5,173.8 1046.5,135.8 1037.8,120.4" fill="#8f1237" fill-opacity="1"/><polygon points="1046.5,173.8 1069.4,171.4 1069.4,133.4 1046.5,135.8" fill="#e11d48" fill-opacity="1"/><polygon points="1037.8,120.4 1060.6,118.0 1069.4,133.4 1046.5,135.8" fill="#ff9bc4" fill-opacity="1"/></g>
+    <text x="1053.5" y="119.9" text-anchor="middle" font-family="'Courier New',monospace" font-size="11" font-weight="700" fill="#ff7ab8">11 · 50%</text>
+    <polygon points="847.4,226.4 872.1,223.8 882.6,242.0 857.9,244.6" fill="#000" opacity="0.45"/>
+    <g><polygon points="839.9,214.3 850.3,232.5 850.3,210.5 839.9,192.3" fill="#c2417f" fill-opacity="0.4" stroke="#ff7ab8" stroke-width="1.2"/><polygon points="850.3,232.5 875.0,229.9 875.0,207.9 850.3,210.5" fill="#ff7ab8" fill-opacity="0.4" stroke="#ff7ab8" stroke-width="1.2"/><polygon points="839.9,192.3 864.6,189.7 875.0,207.9 850.3,210.5" fill="#ffd0e4" fill-opacity="0.55" stroke="#ff7ab8" stroke-width="1.2"/><text transform="matrix(0.95 -0.1 0 1 850.3 232.5)" x="13.0" y="-5.6" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="15" font-weight="800" fill="#fff">Z</text><animateTransform attributeName="transform" type="translate" values="0 0;0 -2.5;0 0" dur="3.0s" begin="1.6s" repeatCount="indefinite"/></g>
+  </g>
+
+  <!-- status dot -->
+  <circle cx="1160" cy="298" r="4" fill="#ff2d55">
+    <animate attributeName="opacity" values="1;0.2;1" dur="1.6s" repeatCount="indefinite"/>
+  </circle>
+  <text x="1148" y="302" text-anchor="end" font-family="'Courier New',Courier,monospace" font-size="11" fill="#ff7ab8" letter-spacing="2">ONLINE</text>
+<metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTpjMDEyM2I3Zi0zMWY0LTQyNjgtYTM0OC02ZjkzMzI4NTJlMzkAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaMdVNM825OfI1C5QFRuWep8AAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDo4NGMzZjVmMi1lZWQwLTQyYjItYmI0ZC01YTA1OTBkZDcyMzdscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNo3d9zlLx9NRXfP3xopr2GSwAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggC8StGjrBHVv3ygb6kj1l/9u0QX1DmERAeij9qkh/EQSkZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaHEYTcJAvig9aA/BwrauJz0AAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRMAAAAAAAAAAAAAAAAZGhhc2hYIE2YgYiP6TEbNABTFBeXFdYZflF6ucEA0jFIwbKzZXyIZG5hbWVuanVtYmYgbWFuaWZlc3RqZXhjbHVzaW9uc4GiZXN0YXJ0GTGeZmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOmMwMTIzYjdmLTMxZjQtNDI2OC1hMzQ4LTZmOTMzMjg1MmUzOS9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOjc2MzFlZjliLTlmYzItNDEzOC1iMzYxLTVhZjEzOWJiNjlkZHJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCALxK0aOsEdW/fKBvqSPWX/27RBfUOYREB6KP2qSH8RBKJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggpVvlhJ3xm8vRvoVJBe4l9kYXQrUd5pCYt2tkp0HE6hiiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFggtwg6+6YXgOufGGXYfN6cl+WyA/29mmUKyPoBLZ2vm/d0Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQLj0ymSagVrUaUd5GcqkFzP8pqzTudUDvWJS84kN0AGkB5lPwAV3T4JtZ+cSXN4SonyYiOWvwJzC6F8G4knIKtg=</c2pa:manifest></metadata></svg>
