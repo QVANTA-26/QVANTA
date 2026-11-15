@@ -40,4 +40,6 @@ COPY --from=build /app/apps/web/src/data/curriculum.json ./apps/web/src/data/cur
 
 EXPOSE 3001
 
-CMD ["node", "apps/api/dist/main.js"]
+# Run pending migrations on every boot, then start the API server. `exec` makes
+# node PID 1 so Render's SIGTERM reaches it for a clean shutdown.
+CMD ["sh", "-c", "npx prisma migrate deploy --schema apps/api/prisma/schema.prisma && exec node apps/api/dist/main.js"]
