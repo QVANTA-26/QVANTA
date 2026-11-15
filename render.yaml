@@ -1,0 +1,71 @@
+# Render Blueprint for the QVANTA backend API.
+# Deploy with: Render Dashboard -> New + -> Blueprint -> pick this repository.
+#
+# The API image is built from infra/api/Dockerfile (Docker context = repo root)
+# and runs `prisma migrate deploy` before booting the server.
+
+databases:
+  - name: qvanta-db
+    databaseName: qvanta
+    user: qvanta
+    plan: free
+    region: singapore
+
+services:
+  - type: web
+    name: qvanta-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./infra/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Injected from the managed Postgres instance above.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: qvanta-db
+          property: connectionString
+      # Render generates strong random values for both JWT secrets.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      # Seed the 527 curriculum modules on every boot (idempotent).
+      - key: SEED_CURRICULUM
+        value: "1"
+      # --- Set these in the Render dashboard (sync: false = prompt on create) ---
+      # Exact frontend origin, no trailing slash. Required for CORS + WebAuthn rpID.
+      - key: WEB_ORIGIN
+        sync: false
+      # Base URL of the Python simulator service, e.g. https://qvanta-simulator.onrender.com
+      - key: SIMULATOR_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      # bcrypt hash of the admin password (escape "$" as "$$" is NOT needed here;
+      # the hash is passed as JSON, not through a shell).
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      # Optional integrations - leave blank to disable the feature.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_FREE_ID
+        sync: false
+      - key: STRIPE_PRICE_PRO_MONTHLY_ID
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
