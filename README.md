@@ -221,26 +221,6 @@ cp apps/web/.env.example apps/web/.env
 cp apps/simulator/.env.example apps/simulator/.env
 ```
 
-> [!TIP]
-> For the checked-in 527-module curriculum, keep `SEED_CURRICULUM=1` in `apps/api/.env`. The API seeds stable numeric module ids so lesson progress, checkpoints, and tutor retrieval share the same source-backed curriculum.
-
-> [!NOTE]
-> **Demo mode:** the platform runs without `GOOGLE_*`, `STRIPE_*`, or `ANTHROPIC_API_KEY`. Stripe CTA buttons are still present, and the tutor falls back to a keyword-driven canned-reply path.
-
-On a local web host (`localhost`, `127.0.0.1`, or `::1`), the login page exposes a development-only demo ID so the authenticated UI can be tried without the API:
-
-<div align="center">
-
-| 🪪 Field | 🔐 Value |
-|:---:|:---:|
-| Email | `dev@qvanta.ai` |
-| Password | `dev-password` |
-
-</div>
-
-> [!WARNING]
-> This account is not a production identity and must not be enabled or reused as a real deployment credential.
-
 ### `05` &nbsp; Install Python simulator dependencies
 
 *Optional: usage-guard already validates simulator liveness at request time, so skip this for a quick smoke-test.*
