@@ -60,8 +60,28 @@ model User {
   refreshTokens   RefreshToken[]
   circuits        Circuit[]           @relation("UserCircuits")
   organizations   OrganizationMember[]
+  webauthnCredentials WebAuthnCredential[]
 
   @@map("users")
+}
+
+/// Passkey (WebAuthn) credentials used for face / fingerprint sign-in. The
+/// credential id is the discoverable lookup key so sign-in needs no email.
+model WebAuthnCredential {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialId String    @unique
+  publicKey    String
+  counter      Int       @default(0)
+  transports   String[]  @default([])
+  deviceType   String?
+  backedUp     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  @@index([userId])
+  @@map("webauthn_credentials")
 }
 
 model Organization {

@@ -25,6 +25,8 @@ function normalizeOperations(value: unknown): GateOp[] {
       qubit: op.qubit,
       timestep: op.timestep,
       ...(op.target !== undefined ? { target: op.target } : {}),
+      ...(op.target2 !== undefined ? { target2: op.target2 } : {}),
+      ...(op.parameter !== undefined ? { parameter: op.parameter } : {}),
     }));
 }
 

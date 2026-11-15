@@ -16,13 +16,62 @@ export interface User {
   stripeCustomerId?: string;
 }
 
-export type Gate = 'H' | 'X' | 'Y' | 'Z' | 'CNOT' | 'Measure';
+/**
+ * Every gate id supported by the builder, simulator and API. Kept as a runtime
+ * tuple so it can drive UI palettes, validation and serialization from a single
+ * source of truth.
+ */
+export const GATE_IDS = [
+  // Single-qubit, non-parametric
+  'I',
+  'H',
+  'X',
+  'Y',
+  'Z',
+  'S',
+  'Sdg',
+  'T',
+  'Tdg',
+  'SX',
+  'SXdg',
+  // Single-qubit, parameterized rotations
+  'RX',
+  'RY',
+  'RZ',
+  'P',
+  // Two-qubit controlled / swap
+  'CNOT',
+  'CY',
+  'CZ',
+  'CH',
+  'SWAP',
+  'iSWAP',
+  'CRX',
+  'CRY',
+  'CRZ',
+  'CP',
+  // Three-qubit
+  'CCX',
+  'CSWAP',
+  'CCZ',
+  // Non-unitary / annotation
+  'Measure',
+  'Barrier',
+  'Reset',
+] as const;
+
+export type Gate = (typeof GATE_IDS)[number];
 
 export interface GateOp {
   gate: Gate;
   qubit: number;
   timestep: number;
+  /** Second qubit: CNOT-family target, or SWAP/Toffoli second control. */
   target?: number;
+  /** Third qubit used by three-qubit gates (Toffoli/Fredkin/CCZ). */
+  target2?: number;
+  /** Rotation angle in radians for parameterized gates (RX/RY/RZ/P and controlled variants). */
+  parameter?: number;
 }
 
 export interface Circuit {

@@ -3,16 +3,21 @@ import { Canvas, useThree, ThreeEvent } from '@react-three/fiber';
 import { OrbitControls, Grid, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useCircuitStore, GATE_PALETTE } from '@/store/circuit';
-import { upsertOperation, circuitToQasmLike } from '@/lib/circuit';
+import { GATE_SPECS, defaultTargets, upsertOperation, circuitToQasmLike } from '@/lib/circuit';
 import type { Gate, GateOp } from '@qvanta/types';
 
 const QUBIT_SPACING = 1.6;
 const STEP_SPACING = 1.4;
 const RAIL_LENGTH_OFFSET = 0.8;
+const PALETTE_COLS = 4;
+const PALETTE_COL_SPACING = 1.5;
+const PALETTE_ROW_SPACING = 1.45;
 
 interface GateMeshProps {
   gate: Gate;
   position: [number, number, number];
+  /** Local z offsets for the extra qubits this gate touches. */
+  linkOffsets?: number[];
   onPlace?: (world: THREE.Vector3) => void;
   onRemove?: () => void;
   onDragPalette?: () => void;
@@ -24,6 +29,7 @@ interface GateMeshProps {
 const GateMesh: React.FC<GateMeshProps> = ({
   gate,
   position,
+  linkOffsets = [],
   onPlace,
   onRemove,
   onDragPalette,
@@ -62,15 +68,10 @@ const GateMesh: React.FC<GateMeshProps> = ({
     }
   };
 
-  const color =
-    gate === 'H' ? '#8f102d' :
-    gate === 'X' ? '#b76e79' :
-    gate === 'Y' ? '#d19b83' :
-    gate === 'Z' ? '#8aa58e' :
-    gate === 'CNOT' ? '#d8ad96' :
-    '#b94b5a';
-
-  const isCNOT = gate === 'CNOT';
+  const spec = GATE_SPECS[gate];
+  const color = spec.color;
+  const isMultiQubit = spec.targets > 0;
+  const label = spec.label;
 
   return (
     <group
@@ -80,8 +81,22 @@ const GateMesh: React.FC<GateMeshProps> = ({
       onPointerUp={onPointerUp}
       onPointerCancel={() => { if (paletteDragSource) setDragging(false); }}
     >
+      {linkOffsets.map((dz, idx) => (
+        <group key={`link-${idx}`}>
+          <mesh position={[0, 0.6, dz / 2]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.035, 0.035, Math.abs(dz), 10]} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.35} />
+          </mesh>
+          {!paletteDragSource && (
+            <mesh position={[0, 0.6, dz]}>
+              <sphereGeometry args={[0.12, 14, 14]} />
+              <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} />
+            </mesh>
+          )}
+        </group>
+      ))}
       <mesh position={[0, 0.6, 0]} castShadow>
-        {isCNOT ? (
+        {isMultiQubit ? (
           <cylinderGeometry args={[0.32, 0.32, 0.5, 16]} />
         ) : (
           <boxGeometry args={[0.7, 0.7, 0.7]} />
@@ -99,13 +114,13 @@ const GateMesh: React.FC<GateMeshProps> = ({
         style={{
           pointerEvents: 'none',
           color: 'white',
-          fontSize: 14,
+          fontSize: label.length > 3 ? 9 : 13,
           fontWeight: 700,
           userSelect: 'none',
           textShadow: '0 1px 2px rgba(0,0,0,0.8)'
         }}
       >
-        {gate}
+        {label}
       </Html>
       {!paletteDragSource && onRemove && (
         <Html position={[0.4, 1.15, 0]} center distanceFactor={10} style={{ pointerEvents: 'auto' }}>
@@ -126,7 +141,6 @@ const GatePalette: React.FC<{ maxStep: number; onDrop: (g: Gate, p: THREE.Vector
   const selected = useCircuitStore((s) => s.selectedGate);
   const setSelected = useCircuitStore((s) => s.setSelectedGate);
   const [draggingGate, setDraggingGate] = React.useState<Gate | null>(null);
-  const groupRef = React.useRef<THREE.Group | null>(null);
 
   // set a global so floor onPointerUp can see the currently-dragged palette gate
   React.useEffect(() => {
@@ -134,39 +148,49 @@ const GatePalette: React.FC<{ maxStep: number; onDrop: (g: Gate, p: THREE.Vector
     w.__qvantaDraggingGate = draggingGate;
   }, [draggingGate]);
 
+  const rows = Math.ceil(GATE_PALETTE.length / PALETTE_COLS);
+  const gridWidth = (PALETTE_COLS - 1) * PALETTE_COL_SPACING;
+  const groupX = -STEP_SPACING * (maxStep / 2 + 2) - gridWidth;
+
   return (
-    <group position={[-STEP_SPACING * (maxStep / 2 + 2), 0, 0]} ref={groupRef}>
-      {GATE_PALETTE.map((g, i) => (
-        <group
-          key={g}
-          position={[0, 0, (i - (GATE_PALETTE.length - 1) / 2) * QUBIT_SPACING]}
-        >
-          <GateMesh
-            gate={g}
-            position={[0, 0, 0]}
-            selected={selected === g}
-            paletteDragSource
-            onDragPalette={() => setDraggingGate(g)}
-            onPlace={(p) => {
-              setDraggingGate(null);
-              onDrop(g, p);
-            }}
-          />
-          <mesh
-            position={[0, 0.6, 0]}
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelected(g);
-            }}
-          >
-            <boxGeometry args={[1.1, 1.1, 1.1]} />
-            <meshBasicMaterial transparent opacity={0} />
-          </mesh>
-           <Html center distanceFactor={8} position={[0, -0.2, 0]} style={{ color: '#aa9b92', fontSize: 10, pointerEvents: 'none' }}>
-            drag ↓ · click to select
-          </Html>
-        </group>
-      ))}
+    <group position={[groupX, 0, 0]}>
+      {GATE_PALETTE.map((g, i) => {
+        const col = i % PALETTE_COLS;
+        const row = Math.floor(i / PALETTE_COLS);
+        const z = (row - (rows - 1) / 2) * PALETTE_ROW_SPACING;
+        const x = col * PALETTE_COL_SPACING;
+        return (
+          <group key={g} position={[x, 0, z]}>
+            <GateMesh
+              gate={g}
+              position={[0, 0, 0]}
+              selected={selected === g}
+              paletteDragSource
+              onDragPalette={() => setDraggingGate(g)}
+              onPlace={(p) => {
+                setDraggingGate(null);
+                onDrop(g, p);
+              }}
+            />
+            <mesh
+              position={[0, 0.6, 0]}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelected(g);
+              }}
+            >
+              <boxGeometry args={[1.05, 1.05, 1.05]} />
+              <meshBasicMaterial transparent opacity={0} />
+            </mesh>
+            <Html center distanceFactor={9} position={[0, -0.18, 0]} style={{ color: '#aa9b92', fontSize: 8, pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+              {GATE_SPECS[g].name}
+            </Html>
+          </group>
+        );
+      })}
+      <Html position={[gridWidth / 2, 1.35, (rows / 2) * PALETTE_ROW_SPACING]} center distanceFactor={9} style={{ color: '#aa9b92', fontSize: 10, pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+        drag a gate onto the rails · click to select
+      </Html>
     </group>
   );
 };
@@ -202,16 +226,17 @@ const QubitRail: React.FC<QubitRailProps> = ({ index, qubitCount, timesteps }) =
 
 interface DroppableFloorProps {
   onDrop: (gate: Gate, local: THREE.Vector3) => void;
+  paletteWidth: number;
 }
 
-const DroppableFloor: React.FC<DroppableFloorProps> = ({ onDrop }) => {
+const DroppableFloor: React.FC<DroppableFloorProps> = ({ onDrop, paletteWidth }) => {
   const qubits = useCircuitStore((s) => s.qubits);
   const timesteps = useCircuitStore((s) => s.timesteps);
   const selectedGate = useCircuitStore((s) => s.selectedGate);
   const setCursor = useCircuitStore((s) => s.setCursor);
   const placeGateAtCursor = useCircuitStore((s) => s.placeGateAtCursor);
 
-  const width = (timesteps + 3) * STEP_SPACING;
+  const width = (timesteps + 3) * STEP_SPACING + paletteWidth;
   const depth = (qubits + 2) * QUBIT_SPACING;
 
   const snapToCell = (world: THREE.Vector3): { qubit: number; timestep: number } => {
@@ -228,7 +253,10 @@ const DroppableFloor: React.FC<DroppableFloorProps> = ({ onDrop }) => {
     setCursor(cell);
     if (gate) {
       const op: GateOp = { gate, qubit: cell.qubit, timestep: cell.timestep };
-      if (gate === 'CNOT') op.target = (cell.qubit + 1) % qubits;
+      const targets = defaultTargets(gate, cell.qubit, qubits);
+      if (targets.target !== undefined) op.target = targets.target;
+      if (targets.target2 !== undefined) op.target2 = targets.target2;
+      if (GATE_SPECS[gate].parameter) op.parameter = Math.PI / 2;
       const state = useCircuitStore.getState();
       const next = upsertOperation(state.operations, op);
       useCircuitStore.setState({ operations: next });
@@ -250,7 +278,7 @@ const DroppableFloor: React.FC<DroppableFloorProps> = ({ onDrop }) => {
   return (
     <mesh
       rotation={[-Math.PI / 2, 0, 0]}
-      position={[0, 0, 0]}
+      position={[-paletteWidth / 2, 0, 0]}
       receiveShadow
       onPointerUp={onPointerUp}
       onDoubleClick={(e) => {
@@ -276,10 +304,17 @@ const CircuitScene3D: React.FC = () => {
 
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  const gatePosition = (op: GateOp): [number, number, number] => {
-    const x = (op.timestep - (timesteps - 1) / 2) * STEP_SPACING;
-    const z = (op.qubit - (qubits - 1) / 2) * QUBIT_SPACING;
-    return [x, 0, z];
+  const zOf = (qubit: number) => (qubit - (qubits - 1) / 2) * QUBIT_SPACING;
+  const xOf = (timestep: number) => (timestep - (timesteps - 1) / 2) * STEP_SPACING;
+
+  const gatePosition = (op: GateOp): [number, number, number] => [xOf(op.timestep), 0, zOf(op.qubit)];
+
+  const linkOffsetsFor = (op: GateOp): number[] => {
+    const offsets: number[] = [];
+    const base = zOf(op.qubit);
+    if (typeof op.target === 'number') offsets.push(zOf(op.target) - base);
+    if (typeof op.target2 === 'number') offsets.push(zOf(op.target2) - base);
+    return offsets;
   };
 
   const handleDropFromPalette = (gate: Gate, world: THREE.Vector3) => {
@@ -288,7 +323,10 @@ const CircuitScene3D: React.FC = () => {
     const qubit = Math.max(0, Math.min(qubits - 1, Math.round(qubitF)));
     const timestep = Math.max(0, Math.min(timesteps - 1, Math.round(timestepF)));
     const op: GateOp = { gate, qubit, timestep };
-    if (gate === 'CNOT') op.target = (qubit + 1) % qubits;
+    const targets = defaultTargets(gate, qubit, qubits);
+    if (targets.target !== undefined) op.target = targets.target;
+    if (targets.target2 !== undefined) op.target2 = targets.target2;
+    if (GATE_SPECS[gate].parameter) op.parameter = Math.PI / 2;
     const state = useCircuitStore.getState();
     const next = upsertOperation(state.operations, op);
     useCircuitStore.setState({ operations: next });
@@ -334,11 +372,13 @@ const CircuitScene3D: React.FC = () => {
     w.__qvantaCircuitToQasm = toQasm;
   }, []);
 
-  const cursorPosX = (cursor.timestep - (timesteps - 1) / 2) * STEP_SPACING;
-  const cursorPosZ = (cursor.qubit - (qubits - 1) / 2) * QUBIT_SPACING;
+  const cursorPosX = xOf(cursor.timestep);
+  const cursorPosZ = zOf(cursor.qubit);
 
-  const bgWidth = (timesteps + 2) * STEP_SPACING;
-  const bgDepth = (qubits + 1.5) * QUBIT_SPACING;
+  const rows = Math.ceil(GATE_PALETTE.length / PALETTE_COLS);
+  const paletteWidth = (PALETTE_COLS + 1) * PALETTE_COL_SPACING;
+  const bgWidth = (timesteps + 2) * STEP_SPACING + paletteWidth;
+  const bgDepth = Math.max((qubits + 1.5) * QUBIT_SPACING, rows * PALETTE_ROW_SPACING + 2);
 
   return (
     <div ref={containerRef} className="h-full w-full">
@@ -358,7 +398,7 @@ const CircuitScene3D: React.FC = () => {
         <directionalLight position={[5, 8, 5]} intensity={0.7} castShadow />
 
         <Grid
-          position={[0, -0.001, 0]}
+          position={[-paletteWidth / 2, -0.001, 0]}
           args={[Math.max(18, bgWidth), Math.max(18, bgDepth)]}
           cellSize={1}
           cellThickness={0.4}
@@ -366,13 +406,13 @@ const CircuitScene3D: React.FC = () => {
           sectionSize={5}
           sectionThickness={0.8}
            sectionColor="#554944"
-          fadeDistance={40}
+          fadeDistance={50}
           fadeStrength={1}
           followCamera={false}
           infiniteGrid={false}
         />
 
-        <DroppableFloor onDrop={handleDropFromPalette} />
+        <DroppableFloor onDrop={handleDropFromPalette} paletteWidth={paletteWidth} />
 
         <GatePalette maxStep={timesteps} onDrop={handleDropFromPalette} />
 
@@ -384,9 +424,10 @@ const CircuitScene3D: React.FC = () => {
           const p = gatePosition(op);
           return (
             <GateMesh
-              key={`${op.gate}-${op.qubit}-${op.timestep}-${op.target ?? 'x'}-${idx}`}
+              key={`${op.gate}-${op.qubit}-${op.timestep}-${op.target ?? 'x'}-${op.target2 ?? 'x'}-${idx}`}
               gate={op.gate}
               position={p}
+              linkOffsets={linkOffsetsFor(op)}
               onPlace={(world) => handleDropFromPalette(op.gate, world)}
               onRemove={() => removeAt(op.qubit, op.timestep, op.target)}
             />
@@ -403,7 +444,7 @@ const CircuitScene3D: React.FC = () => {
           enableZoom
           enableRotate
           minDistance={3}
-          maxDistance={35}
+          maxDistance={45}
           target={[0, 0, 0]}
         />
       </Canvas>

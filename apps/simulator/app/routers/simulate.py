@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import time
@@ -19,26 +20,151 @@ from app.queue import (
 
 router = APIRouter(prefix="/simulate", tags=["simulate"])
 
+# Qiskit method name -> canonical gate id.
+QISKIT_TO_GATE = {
+    "id": "I",
+    "h": "H",
+    "x": "X",
+    "y": "Y",
+    "z": "Z",
+    "s": "S",
+    "sdg": "Sdg",
+    "t": "T",
+    "tdg": "Tdg",
+    "sx": "SX",
+    "sxdg": "SXdg",
+    "rx": "RX",
+    "ry": "RY",
+    "rz": "RZ",
+    "p": "P",
+    "u1": "P",
+    "cx": "CNOT",
+    "cnot": "CNOT",
+    "cy": "CY",
+    "cz": "CZ",
+    "ch": "CH",
+    "swap": "SWAP",
+    "iswap": "iSWAP",
+    "crx": "CRX",
+    "cry": "CRY",
+    "crz": "CRZ",
+    "cp": "CP",
+    "cu1": "CP",
+    "ccx": "CCX",
+    "toffoli": "CCX",
+    "cswap": "CSWAP",
+    "fredkin": "CSWAP",
+    "ccz": "CCZ",
+    "measure": "Measure",
+    "barrier": "Barrier",
+    "reset": "Reset",
+}
+
+# Gate id -> (qiskit method, whether the first argument is an angle).
+GATE_TO_QISKIT_METHOD = {
+    "I": ("id", False),
+    "H": ("h", False),
+    "X": ("x", False),
+    "Y": ("y", False),
+    "Z": ("z", False),
+    "S": ("s", False),
+    "Sdg": ("sdg", False),
+    "T": ("t", False),
+    "Tdg": ("tdg", False),
+    "SX": ("sx", False),
+    "SXdg": ("sxdg", False),
+    "RX": ("rx", True),
+    "RY": ("ry", True),
+    "RZ": ("rz", True),
+    "P": ("p", True),
+    "CNOT": ("cx", False),
+    "CY": ("cy", False),
+    "CZ": ("cz", False),
+    "CH": ("ch", False),
+    "SWAP": ("swap", False),
+    "iSWAP": ("iswap", False),
+    "CRX": ("crx", True),
+    "CRY": ("cry", True),
+    "CRZ": ("crz", True),
+    "CP": ("cp", True),
+    "CCX": ("ccx", False),
+    "CSWAP": ("cswap", False),
+    "CCZ": ("ccz", False),
+    "Measure": ("measure", False),
+    "Barrier": ("barrier", False),
+    "Reset": ("reset", False),
+}
+
+# Gates whose first call argument is a rotation angle.
+QISKIT_PARAM_GATES = {gate for gate, (_, has_param) in GATE_TO_QISKIT_METHOD.items() if has_param}
+
+# Allow only safe scaffolding plus registered qc.<method>(...) calls. The circuit
+# is never executed as Python; calls are regex-extracted and replayed on a Qiskit
+# QuantumCircuit, so a permissive gate-name match is safe here.
+_ALLOWED_METHODS = "|".join(sorted(QISKIT_TO_GATE.keys(), key=len, reverse=True))
 ALLOWED_QISKIT_LINE = re.compile(
-    r'^\s*(qc\.h|qc\.x|qc\.y|qc\.z|qc\.cx|qc\.measure|qc\.barrier|'
-    r'qc\.ry|qc\.rx|qc\.rz|qc\.swap|'
-    r'from qiskit|import|QuantumCircuit|QuantumRegister|ClassicalRegister|'
-    r'qc=|qc =).*$'
+    rf'^\s*(from qiskit|import|QuantumCircuit|QuantumRegister|ClassicalRegister|qc\s*=|qc\s*\.\s*(?:{_ALLOWED_METHODS})\s*\().*$'
 )
 
-SINGLE_QUBIT_GATE = re.compile(r'qc\.(h|x|y|z)\s*\(\s*q?\[(\d+)\]\s*\)')
-CX_GATE = re.compile(r'qc\.cx\s*\(\s*q?\[(\d+)\]\s*,\s*q?\[(\d+)\]\s*\)')
-MEASURE_GATE = re.compile(r'qc\.measure\s*\(\s*q?\[(\d+)\]\s*,\s*c?\[(\d+)\]\s*\)')
-ROT_GATE = re.compile(r'qc\.(rx|ry|rz)\s*\(\s*([^,]+)\s*,\s*q?\[(\d+)\]\s*\)')
-SWAP_GATE = re.compile(r'qc\.swap\s*\(\s*q?\[(\d+)\]\s*,\s*q?\[(\d+)\]\s*\)')
+_QISKIT_METHOD_RE = re.compile(r'qc\s*\.\s*(\w+)\s*\(([^)]*)\)')
+_QISKIT_ARG_INDEX_RE = re.compile(r'^\s*[qc]?\s*\[?\s*(\d+)\s*\]?\s*$')
 
-GATE_MAP_JSON = {
+# JSON AST gate tables. Keys are the canonical gate ids used by the web app.
+SINGLE_QUBIT_GATES = {
+    "I": "id",
     "H": "h",
     "X": "x",
     "Y": "y",
     "Z": "z",
+    "S": "s",
+    "Sdg": "sdg",
+    "T": "t",
+    "Tdg": "tdg",
+    "SX": "sx",
+    "SXdg": "sxdg",
+}
+
+SINGLE_QUBIT_PARAM_GATES = {
+    "RX": "rx",
+    "RY": "ry",
+    "RZ": "rz",
+    "P": "p",
+}
+
+TWO_QUBIT_GATES = {
     "CNOT": "cx",
+    "CY": "cy",
+    "CZ": "cz",
+    "CH": "ch",
+    "SWAP": "swap",
+    "iSWAP": "iswap",
+}
+
+TWO_QUBIT_PARAM_GATES = {
+    "CRX": "crx",
+    "CRY": "cry",
+    "CRZ": "crz",
+    "CP": "cp",
+}
+
+THREE_QUBIT_GATES = {
+    "CCX": "ccx",
+    "CSWAP": "cswap",
+    "CCZ": "ccz",
+}
+
+SPECIAL_GATES = {"Measure", "Barrier", "Reset"}
+
+# Backwards-compatible union of every JSON AST gate id.
+GATE_MAP_JSON = {
+    **SINGLE_QUBIT_GATES,
+    **SINGLE_QUBIT_PARAM_GATES,
+    **TWO_QUBIT_GATES,
+    **TWO_QUBIT_PARAM_GATES,
+    **THREE_QUBIT_GATES,
     "Measure": "measure",
+    "Barrier": "barrier",
+    "Reset": "reset",
 }
 
 _NUMBER_RE = re.compile(r'^-?\d+(\.\d+)?$')
@@ -204,6 +330,8 @@ def _parse_json_ast(value: str) -> QuantumCircuit:
         gate_name = op.get("gate")
         qubit = op.get("qubit")
         target = op.get("target")
+        target2 = op.get("target2")
+        parameter = op.get("parameter")
 
         if gate_name not in GATE_MAP_JSON:
             raise HTTPException(
@@ -211,55 +339,69 @@ def _parse_json_ast(value: str) -> QuantumCircuit:
                 detail={"code": "circuit_parse_error", "message": f"Unknown gate: {gate_name} at operation {idx}"}
             )
 
-        mapped_gate = GATE_MAP_JSON[gate_name]
-
-        if mapped_gate == "cx":
-            if not isinstance(qubit, int) or not isinstance(target, int):
+        def check_qubit(value, label):
+            if not isinstance(value, int) or isinstance(value, bool):
                 raise HTTPException(
                     status_code=400,
-                    detail={"code": "circuit_parse_error", "message": f"CNOT requires qubit and target at operation {idx}"}
+                    detail={"code": "circuit_parse_error", "message": f"{gate_name} requires {label} at operation {idx}"}
                 )
-            if qubit < 0 or qubit >= n_qubits or target < 0 or target >= n_qubits:
+            if value < 0 or value >= n_qubits:
                 raise HTTPException(
                     status_code=400,
                     detail={"code": "circuit_parse_error", "message": f"Qubit index out of range at operation {idx}"}
                 )
-            qc.cx(qubit, target)
-        elif mapped_gate == "measure":
+            return value
+
+        if gate_name == "Barrier":
+            qc.barrier()
+        elif gate_name == "Reset":
+            qc.reset(check_qubit(qubit, "qubit"))
+        elif gate_name == "Measure":
             if not has_measure:
                 continue
-            if not isinstance(qubit, int):
+            qc.measure(check_qubit(qubit, "qubit"), check_qubit(qubit, "qubit"))
+        elif gate_name in SINGLE_QUBIT_GATES:
+            getattr(qc, SINGLE_QUBIT_GATES[gate_name])(check_qubit(qubit, "qubit"))
+        elif gate_name in SINGLE_QUBIT_PARAM_GATES:
+            if not isinstance(parameter, (int, float)) or isinstance(parameter, bool):
                 raise HTTPException(
                     status_code=400,
-                    detail={"code": "circuit_parse_error", "message": f"Measure requires qubit at operation {idx}"}
+                    detail={"code": "circuit_parse_error", "message": f"{gate_name} requires a numeric parameter at operation {idx}"}
                 )
-            if qubit < 0 or qubit >= n_qubits:
+            getattr(qc, SINGLE_QUBIT_PARAM_GATES[gate_name])(float(parameter), check_qubit(qubit, "qubit"))
+        elif gate_name in TWO_QUBIT_GATES:
+            getattr(qc, TWO_QUBIT_GATES[gate_name])(
+                check_qubit(qubit, "qubit"), check_qubit(target, "target")
+            )
+        elif gate_name in TWO_QUBIT_PARAM_GATES:
+            if not isinstance(parameter, (int, float)) or isinstance(parameter, bool):
                 raise HTTPException(
                     status_code=400,
-                    detail={"code": "circuit_parse_error", "message": f"Qubit index out of range at operation {idx}"}
+                    detail={"code": "circuit_parse_error", "message": f"{gate_name} requires a numeric parameter at operation {idx}"}
                 )
-            qc.measure(qubit, qubit)
-        else:
-            if not isinstance(qubit, int):
-                raise HTTPException(
-                    status_code=400,
-                    detail={"code": "circuit_parse_error", "message": f"Gate {gate_name} requires qubit at operation {idx}"}
-                )
-            if qubit < 0 or qubit >= n_qubits:
-                raise HTTPException(
-                    status_code=400,
-                    detail={"code": "circuit_parse_error", "message": f"Qubit index out of range at operation {idx}"}
-                )
-            getattr(qc, mapped_gate)(qubit)
+            getattr(qc, TWO_QUBIT_PARAM_GATES[gate_name])(
+                float(parameter), check_qubit(qubit, "qubit"), check_qubit(target, "target")
+            )
+        elif gate_name in THREE_QUBIT_GATES:
+            getattr(qc, THREE_QUBIT_GATES[gate_name])(
+                check_qubit(qubit, "qubit"),
+                check_qubit(target, "target"),
+                check_qubit(target2, "target2"),
+            )
 
     return qc
+
+
+def _qiskit_arg_index(arg: str):
+    m = _QISKIT_ARG_INDEX_RE.match(arg)
+    return int(m.group(1)) if m else None
 
 
 def _parse_qiskit_code(value: str) -> QuantumCircuit:
     lines = value.split("\n")
     for line in lines:
         stripped = line.strip()
-        if not stripped:
+        if not stripped or stripped.startswith("#"):
             continue
         if not ALLOWED_QISKIT_LINE.match(line):
             raise HTTPException(
@@ -267,92 +409,110 @@ def _parse_qiskit_code(value: str) -> QuantumCircuit:
                 detail={"code": "circuit_parse_error", "message": f"Disallowed line in qiskit_code: {stripped[:80]}"}
             )
 
+    # Collect recognised gate calls in document order.
+    calls: list[tuple[str, list[str]]] = []
+    for m in _QISKIT_METHOD_RE.finditer(value):
+        gate = QISKIT_TO_GATE.get(m.group(1).lower())
+        if gate is None:
+            continue
+        args = [a.strip() for a in m.group(2).split(",") if a.strip()]
+        calls.append((gate, args))
+
     n_qubits = 0
     n_clbits = 0
     qc_init_match = re.search(
-        r'qc\s*=\s*QuantumCircuit\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)', value
-    ) or re.search(
-        r'qc\s*=\s*QuantumCircuit\s*\(\s*(\d+)\s*\)', value
+        r'QuantumCircuit\s*\(\s*(\d+)\s*(?:,\s*(\d+)\s*)?\)', value
     )
-
     if qc_init_match:
-        groups = qc_init_match.groups()
-        n_qubits = int(groups[0])
-        if len(groups) > 1 and groups[1] is not None:
-            n_clbits = int(groups[1])
+        n_qubits = int(qc_init_match.group(1))
+        if qc_init_match.group(2) is not None:
+            n_clbits = int(qc_init_match.group(2))
 
-    for m in SINGLE_QUBIT_GATE.finditer(value):
-        q = int(m.group(2))
-        if q + 1 > n_qubits:
-            n_qubits = q + 1
-    for m in CX_GATE.finditer(value):
-        q1, q2 = int(m.group(1)), int(m.group(2))
-        if q1 + 1 > n_qubits:
-            n_qubits = q1 + 1
-        if q2 + 1 > n_qubits:
-            n_qubits = q2 + 1
-    for m in ROT_GATE.finditer(value):
-        q = int(m.group(3))
-        if q + 1 > n_qubits:
-            n_qubits = q + 1
-    for m in SWAP_GATE.finditer(value):
-        q1, q2 = int(m.group(1)), int(m.group(2))
-        if q1 + 1 > n_qubits:
-            n_qubits = q1 + 1
-        if q2 + 1 > n_qubits:
-            n_qubits = q2 + 1
-    for m in MEASURE_GATE.finditer(value):
-        q, c = int(m.group(1)), int(m.group(2))
-        if q + 1 > n_qubits:
-            n_qubits = q + 1
-        if c + 1 > n_clbits:
-            n_clbits = c + 1
+    has_measure = any(gate == "Measure" for gate, _ in calls)
+
+    for gate, args in calls:
+        if gate == "Barrier":
+            continue
+        if gate == "Measure":
+            q = _qiskit_arg_index(args[0]) if args else None
+            c = _qiskit_arg_index(args[1]) if len(args) > 1 else q
+            if q is not None and q + 1 > n_qubits:
+                n_qubits = q + 1
+            if c is not None and c + 1 > n_clbits:
+                n_clbits = c + 1
+            continue
+        qubit_args = args[1:] if gate in QISKIT_PARAM_GATES else args
+        for a in qubit_args:
+            q = _qiskit_arg_index(a)
+            if q is not None and q + 1 > n_qubits:
+                n_qubits = q + 1
 
     if n_qubits == 0:
         n_qubits = 1
+    if has_measure and n_clbits == 0:
+        n_clbits = n_qubits
 
     qr = QuantumRegister(n_qubits, "q")
     if n_clbits > 0:
-        cr = ClassicalRegister(n_clbits if n_clbits > 0 else n_qubits, "c")
-        qc = QuantumCircuit(qr, cr)
+        qc = QuantumCircuit(qr, ClassicalRegister(n_clbits, "c"))
     else:
         qc = QuantumCircuit(qr)
 
-    for m in SINGLE_QUBIT_GATE.finditer(value):
-        gate = m.group(1)
-        q = int(m.group(2))
-        getattr(qc, gate)(q)
+    for gate, args in calls:
+        if gate == "Barrier":
+            qc.barrier()
+            continue
+        if gate == "Measure":
+            q = _qiskit_arg_index(args[0]) if args else None
+            c = _qiskit_arg_index(args[1]) if len(args) > 1 else q
+            if q is None or c is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"code": "circuit_parse_error", "message": "Measure requires qubit and clbit indices"}
+                )
+            qc.measure(q, c)
+            continue
+        if gate == "Reset":
+            q = _qiskit_arg_index(args[0]) if args else None
+            if q is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"code": "circuit_parse_error", "message": "Reset requires a qubit index"}
+                )
+            qc.reset(q)
+            continue
 
-    for m in ROT_GATE.finditer(value):
-        gate = m.group(1)
-        angle_str = m.group(2).strip()
-        try:
-            angle = _safe_parse_angle(angle_str)
-        except HTTPException:
-            raise
-        except Exception:
+        method, has_param = GATE_TO_QISKIT_METHOD[gate]
+        angle = None
+        if has_param:
+            if not args:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"code": "circuit_parse_error", "message": f"{gate} requires an angle argument"}
+                )
+            try:
+                angle = _safe_parse_angle(args[0])
+            except HTTPException:
+                raise
+            except Exception:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"code": "circuit_parse_error", "message": f"Cannot parse rotation angle: {args[0]}"}
+                )
+            qubit_args = args[1:]
+        else:
+            qubit_args = args
+
+        qubits = [_qiskit_arg_index(a) for a in qubit_args]
+        if not qubits or any(q is None for q in qubits):
             raise HTTPException(
                 status_code=400,
-                detail={"code": "circuit_parse_error", "message": f"Cannot parse rotation angle: {angle_str}"}
+                detail={"code": "circuit_parse_error", "message": f"Could not resolve qubits for gate {gate}"}
             )
-        q = int(m.group(3))
-        getattr(qc, gate)(angle, q)
-
-    for m in CX_GATE.finditer(value):
-        q1, q2 = int(m.group(1)), int(m.group(2))
-        qc.cx(q1, q2)
-
-    for m in SWAP_GATE.finditer(value):
-        q1, q2 = int(m.group(1)), int(m.group(2))
-        qc.swap(q1, q2)
-
-    for m in MEASURE_GATE.finditer(value):
-        q, c = int(m.group(1)), int(m.group(2))
-        if n_clbits == 0:
-            cr_new = ClassicalRegister(max(n_qubits, c + 1), "c")
-            qc.add_register(cr_new)
-            n_clbits = cr_new.size
-        qc.measure(q, c)
+        if angle is None:
+            getattr(qc, method)(*qubits)
+        else:
+            getattr(qc, method)(angle, *qubits)
 
     return qc
 
@@ -414,6 +574,17 @@ def has_measure_operations(qc: QuantumCircuit) -> bool:
     return False
 
 
+def _statevector_from_circuit(qc: QuantumCircuit) -> Statevector:
+    """Analytically derive the statevector, ignoring final measurements.
+
+    ``AerSimulator`` only attaches a statevector to its result when the circuit
+    contains a ``save_statevector`` instruction, so we compute the state exactly
+    from the instructions instead of running a second simulation.
+    """
+    qc_sv = qc.remove_final_measurements(inplace=False)
+    return Statevector.from_instruction(qc_sv)
+
+
 def run_simulation_inline(qc: QuantumCircuit, shots: int) -> SimulationResponse:
     job_id = generate_job_id()
     start_time = time.time()
@@ -423,44 +594,24 @@ def run_simulation_inline(qc: QuantumCircuit, shots: int) -> SimulationResponse:
         has_meas = has_measure_operations(qc)
         has_clbits = qc.num_clbits > 0
 
-        sim = AerSimulator(method="automatic")
+        counts: dict[str, int] = {}
+        sv_result = None
+        per_qubit_bloch: list[dict] = []
 
         if has_meas and has_clbits:
+            sim = AerSimulator(method="automatic")
             transpiled = transpile(qc, sim)
             result = sim.run(transpiled, shots=shots).result()
             counts_raw = result.get_counts()
             counts = {str(k): int(v) for k, v in counts_raw.items()}
 
-            if hasattr(result, "results") and len(result.results) > 0:
-                sv_result = None
-                try:
-                    sim_sv = AerSimulator(method="statevector")
-                    qc_sv = qc.remove_final_measurements(inplace=False)
-                    if qc_sv is None:
-                        qc_sv = qc.copy()
-                        qc_sv.remove_final_measurements()
-                    transpiled_sv = transpile(qc_sv, sim_sv)
-                    sv_res = sim_sv.run(transpiled_sv, shots=1).result()
-                    if sv_res.success:
-                        sv = Statevector(sv_res.get_statevector())
-                        sv_result = statevector_to_list(sv)
-                        per_qubit_bloch = compute_per_qubit_bloch_from_statevector(sv, n_qubits)
-                    else:
-                        per_qubit_bloch = []
-                except Exception:
-                    per_qubit_bloch = []
-                    sv_result = None
-            else:
-                per_qubit_bloch = []
-                sv_result = None
-        else:
-            sim_sv = AerSimulator(method="statevector")
-            transpiled_sv = transpile(qc, sim_sv)
-            sv_res = sim_sv.run(transpiled_sv, shots=1).result()
-            sv = Statevector(sv_res.get_statevector())
+        try:
+            sv = _statevector_from_circuit(qc)
             sv_result = statevector_to_list(sv)
             per_qubit_bloch = compute_per_qubit_bloch_from_statevector(sv, n_qubits)
-            counts = {}
+        except Exception:
+            sv_result = None
+            per_qubit_bloch = []
 
         execution_time_ms = (time.time() - start_time) * 1000.0
 
@@ -492,7 +643,11 @@ def run_simulation_inline(qc: QuantumCircuit, shots: int) -> SimulationResponse:
 async def simulate_circuit(request: SimulationRequest) -> SimulationResponse:
     qc = parse_circuit(request.circuit_repr)
 
-    should_queue = request.shots >= 8192 or is_redis_enabled()
+    # The Redis queue is only useful when a worker is deployed to drain it.
+    # Without such a worker a queued job would never complete, so queueing is
+    # opt-in and every simulation runs inline by default.
+    queue_enabled = os.getenv("SIMULATOR_QUEUE_ENABLED", "0") == "1"
+    should_queue = queue_enabled and request.shots >= 8192 and is_redis_enabled()
 
     if should_queue and is_redis_enabled():
         job_id = generate_job_id()

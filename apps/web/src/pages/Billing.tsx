@@ -149,7 +149,7 @@ const BillingPage: React.FC = () => {
             <div className="flex items-baseline justify-between">
               <CardTitle>Free</CardTitle>
               <div className="text-right">
-                <div className="text-2xl font-bold text-text-100">$0<span className="text-base font-normal text-text-400">/mo</span></div>
+                <div className="text-2xl font-bold text-text-100">₹0<span className="text-base font-normal text-text-400">/mo</span></div>
               </div>
             </div>
           </CardHeader>
@@ -180,7 +180,7 @@ const BillingPage: React.FC = () => {
             <div className="flex items-baseline justify-between">
               <CardTitle>Pro</CardTitle>
               <div className="text-right">
-                <div className="text-2xl font-bold text-text-100">$19<span className="text-base font-normal text-text-400">/mo</span></div>
+                <div className="text-2xl font-bold text-text-100">₹1,999<span className="text-base font-normal text-text-400">/mo</span></div>
                 <p className="text-xs text-text-500">{proTier ? `(${proTier.simsPerMonth.toLocaleString()} sims/mo cap)` : 'Unlimited'}</p>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@qvanta
 import { isLocalDevHost } from '@/lib/runtime';
 import { buildAuthPath, isSafeAuthRedirect } from '@/lib/auth-navigation';
 import { getApiUrl } from '@/lib/api-client';
+import { biometricSignInSupported } from '@/lib/webauthn';
 
 interface AuthFormProps {
   mode: 'login' | 'register';
@@ -11,6 +12,8 @@ interface AuthFormProps {
   subtitle: string;
   submitLabel: string;
   onSubmit: (values: AuthFormValues) => Promise<void>;
+  onBiometricLogin?: () => Promise<void>;
+  onBiometricRegister?: (email: string) => Promise<void>;
   loading?: boolean;
   error?: string | null;
 }
@@ -27,6 +30,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
   subtitle,
   submitLabel,
   onSubmit,
+  onBiometricLogin,
+  onBiometricRegister,
   loading,
   error,
 }) => {
@@ -93,6 +98,38 @@ const AuthForm: React.FC<AuthFormProps> = ({
 
     setTermsError(null);
     await onSubmit(values);
+  };
+
+  const biometricsAvailable =
+    React.useMemo(() => biometricSignInSupported(), []) &&
+    (mode === 'login' ? Boolean(onBiometricLogin) : Boolean(onBiometricRegister));
+
+  const handleBiometricLogin = async () => {
+    if (!onBiometricLogin) {
+      return;
+    }
+    setTermsError(null);
+    await onBiometricLogin();
+  };
+
+  const handleBiometricRegister = async () => {
+    if (!onBiometricRegister) {
+      return;
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+      setFieldErrors({ email: 'Enter your email address to create your passkey.' });
+      return;
+    }
+
+    if (!requireTermsAcceptance()) {
+      return;
+    }
+
+    setFieldErrors({});
+    setTermsError(null);
+    await onBiometricRegister(normalizedEmail);
   };
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
@@ -229,6 +266,24 @@ const AuthForm: React.FC<AuthFormProps> = ({
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Please wait...' : submitLabel}
             </Button>
+
+            {biometricsAvailable && (
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                onClick={
+                  mode === 'login'
+                    ? () => void handleBiometricLogin()
+                    : () => void handleBiometricRegister()
+                }
+                disabled={loading}
+              >
+                {mode === 'login'
+                  ? 'Sign in with Face ID / fingerprint'
+                  : 'Create account with Face ID / fingerprint'}
+              </Button>
+            )}
 
             <Button
               type="button"

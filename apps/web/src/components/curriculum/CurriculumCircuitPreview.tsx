@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Card, CardContent } from '@qvanta/ui';
-import type { GateOp } from '@qvanta/types';
 import type { CurriculumModule } from './curriculum';
+import { GATE_SPECS } from '@/lib/circuit';
 import { buildCurriculumCircuit, type CurriculumCircuitBlueprint } from '@/lib/curriculum-circuit';
 
 interface CurriculumCircuitPreviewProps {
@@ -12,15 +12,6 @@ interface CurriculumCircuitPreviewProps {
 const ROW_HEIGHT = 48;
 const LEFT_GUTTER = 58;
 const COLUMN_WIDTH = 82;
-
-const gateColor: Record<GateOp['gate'], string> = {
-  H: '#d8ad96',
-  X: '#c58c88',
-  Y: '#b76e79',
-  Z: '#9fb3a4',
-  CNOT: '#e4d5cc',
-  Measure: '#9ed4df',
-};
 
 const CurriculumCircuitPreview: React.FC<CurriculumCircuitPreviewProps> = ({ module, onOpenBuilder }) => {
   const blueprint = React.useMemo(() => buildCurriculumCircuit(module), [module]);
@@ -112,17 +103,47 @@ const CurriculumCircuitPreview: React.FC<CurriculumCircuitPreviewProps> = ({ mod
             {circuit.operations.map((operation, index) => {
               const x = columnX(operation.timestep);
               const y = rowY(operation.qubit);
-              const color = gateColor[operation.gate];
+              const spec = GATE_SPECS[operation.gate];
+              const color = spec.color;
+              const targets = [operation.target, operation.target2].filter(
+                (t): t is number => typeof t === 'number'
+              );
 
-              if (operation.gate === 'CNOT' && typeof operation.target === 'number') {
-                const targetY = rowY(operation.target);
+              if (targets.length > 0) {
+                const topY = Math.min(y, ...targets.map(rowY));
+                const bottomY = Math.max(y, ...targets.map(rowY));
                 return (
                   <g key={`operation-${index}`}>
-                    <line x1={x} y1={Math.min(y, targetY)} x2={x} y2={Math.max(y, targetY)} stroke={color} strokeWidth="2" />
-                    <circle cx={x} cy={y} r="7" fill={color} />
-                    <circle cx={x} cy={targetY} r="10" fill="#100c0e" stroke={color} strokeWidth="2" />
-                    <line x1={x - 6} y1={targetY} x2={x + 6} y2={targetY} stroke={color} strokeWidth="2" />
-                    <line x1={x} y1={targetY - 6} x2={x} y2={targetY + 6} stroke={color} strokeWidth="2" />
+                    <line x1={x} y1={topY} x2={x} y2={bottomY} stroke={color} strokeWidth="2" />
+                    <circle cx={x} cy={y} r="6" fill={color} />
+                    {targets.map((t) => {
+                      const targetY = rowY(t);
+                      return (
+                        <g key={`target-${t}`}>
+                          <circle cx={x} cy={targetY} r="10" fill="#100c0e" stroke={color} strokeWidth="2" />
+                          {(spec.targets === 1 && operation.gate !== 'SWAP' && operation.gate !== 'iSWAP') ? (
+                            <>
+                              <line x1={x - 6} y1={targetY} x2={x + 6} y2={targetY} stroke={color} strokeWidth="2" />
+                              <line x1={x} y1={targetY - 6} x2={x} y2={targetY + 6} stroke={color} strokeWidth="2" />
+                            </>
+                          ) : (
+                            <text
+                              x={x}
+                              y={targetY + 4}
+                              textAnchor="middle"
+                              fill={color}
+                              fontSize="10"
+                              fontWeight="700"
+                              fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
+                            >
+                              {operation.gate === 'SWAP' || operation.gate === 'iSWAP'
+                                ? spec.label
+                                : spec.label.replace(/^C/, '')}
+                            </text>
+                          )}
+                        </g>
+                      );
+                    })}
                   </g>
                 );
               }
@@ -139,7 +160,7 @@ const CurriculumCircuitPreview: React.FC<CurriculumCircuitPreviewProps> = ({ mod
                     fontWeight="700"
                     fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
                   >
-                    {operation.gate === 'Measure' ? 'M' : operation.gate}
+                    {spec.label}
                   </text>
                 </g>
               );

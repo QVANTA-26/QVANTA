@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export const PLACEHOLDER_CONTACT_EMAIL = 'placeholder-contact@example.invalid';
+export const CONTACT_EMAIL = 'qvanta26@gmail.com';
 
 interface LegalPageLayoutProps {
   eyebrow: string;

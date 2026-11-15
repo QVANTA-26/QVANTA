@@ -1,19 +1,13 @@
 import React from 'react';
 import { useCircuitStore, GATE_PALETTE } from '@/store/circuit';
-import type { Gate, GateOp } from '@qvanta/types';
+import { GATE_SPECS } from '@/lib/circuit';
+import type { GateOp } from '@qvanta/types';
 
 const CELL_W = 56;
 const CELL_H = 56;
 const PALETTE_W = 200;
-
-const GATE_FILL: Record<Gate, string> = {
-  H: '#8f102d',
-  X: '#b76e79',
-  Y: '#d19b83',
-  Z: '#8aa58e',
-  CNOT: '#d8ad96',
-  Measure: '#b94b5a'
-};
+const PALETTE_COLS = 4;
+const PALETTE_ICON = 38;
 
 const CircuitScene2D: React.FC = () => {
   const qubits = useCircuitStore((s) => s.qubits);
@@ -27,8 +21,10 @@ const CircuitScene2D: React.FC = () => {
   const removeAt = useCircuitStore((s) => s.removeAt);
   const setCursor = useCircuitStore((s) => s.setCursor);
 
+  const paletteRows = Math.ceil(GATE_PALETTE.length / PALETTE_COLS);
+  const paletteHeight = paletteRows * (PALETTE_ICON + 10) + 24;
   const canvasW = PALETTE_W + (timesteps + 1) * CELL_W;
-  const canvasH = Math.max(qubits + 1, 4) * CELL_H + 40;
+  const canvasH = Math.max(Math.max(qubits + 1, 4) * CELL_H + 40, paletteHeight);
 
   const railY = (i: number) => 40 + (i + 0.5) * CELL_H;
   const stepX = (t: number) => PALETTE_W + (t + 0.5) * CELL_W;
@@ -65,33 +61,37 @@ const CircuitScene2D: React.FC = () => {
       <svg width={canvasW} height={canvasH} className="rounded-lg bg-bg-950">
         <g>
           {GATE_PALETTE.map((g, i) => {
-            const x = 20;
-            const y = 20 + i * (CELL_H - 8);
+            const spec = GATE_SPECS[g];
+            const col = i % PALETTE_COLS;
+            const row = Math.floor(i / PALETTE_COLS);
+            const cellW = (PALETTE_W - 16) / PALETTE_COLS;
+            const x = 8 + col * cellW + cellW / 2;
+            const y = 20 + row * (PALETTE_ICON + 10) + PALETTE_ICON / 2;
             const active = selectedGate === g;
             return (
               <g key={g} style={{ cursor: 'pointer' }} onClick={() => setSelected(g)}>
                 <rect
-                  x={x}
-                  y={y}
-                  width={PALETTE_W - 40}
-                  height={CELL_H - 16}
-                  rx={8}
-                  fill={active ? GATE_FILL[g] : '#1a1517'}
+                  x={x - cellW / 2 + 3}
+                  y={y - PALETTE_ICON / 2}
+                  width={cellW - 6}
+                  height={PALETTE_ICON}
+                  rx={7}
+                  fill={active ? spec.color : '#1a1517'}
                   stroke={active ? '#e4d5cc' : '#3b3030'}
                   strokeWidth={active ? 2 : 1}
                   opacity={active ? 0.95 : 0.9}
                 />
                 <text
-                  x={x + (PALETTE_W - 40) / 2}
-                  y={y + (CELL_H - 16) / 2}
+                  x={x}
+                  y={y}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill="white"
-                  fontSize={14}
+                  fontSize={spec.label.length > 3 ? 9 : 12}
                   fontWeight={700}
                   style={{ pointerEvents: 'none', userSelect: 'none' }}
                 >
-                  {g}
+                  {spec.label}
                 </text>
               </g>
             );
@@ -154,35 +154,51 @@ const CircuitScene2D: React.FC = () => {
 
         <g>
           {operations.map((op, idx) => {
+            const spec = GATE_SPECS[op.gate];
             const cx = stepX(op.timestep);
             const cy = railY(op.qubit);
-            const w = op.gate === 'CNOT' ? CELL_H * 0.68 : CELL_H * 0.68;
+            const w = CELL_H * 0.68;
             const h = CELL_H * 0.68;
+            const targets = [op.target, op.target2].filter(
+              (t): t is number => typeof t === 'number'
+            );
+            const topY = targets.length ? Math.min(cy, ...targets.map(railY)) : cy;
+            const bottomY = targets.length ? Math.max(cy, ...targets.map(railY)) : cy;
             return (
               <g
                 key={`${op.gate}-${op.qubit}-${op.timestep}-${op.target ?? 'x'}-${idx}`}
                 style={{ cursor: 'pointer' }}
                 onDoubleClick={(e) => { e.stopPropagation(); removeAt(op.qubit, op.timestep, op.target); }}
               >
-                {op.gate === 'CNOT' && op.target !== undefined && (
+                {targets.length > 0 && (
                   <line
                     x1={cx}
-                    y1={cy}
+                    y1={topY}
                     x2={cx}
-                    y2={railY(op.target)}
-                     stroke="#d8ad96"
+                    y2={bottomY}
+                    stroke={spec.color}
                     strokeWidth={2.2}
-                    strokeDasharray="2 3"
                   />
                 )}
+                {targets.map((t) => (
+                  <circle
+                    key={`dot-${t}`}
+                    cx={cx}
+                    cy={railY(t)}
+                    r={4}
+                    fill={spec.color}
+                    stroke="#292122"
+                    strokeWidth={1}
+                  />
+                ))}
                 <rect
                   x={cx - w / 2}
                   y={cy - h / 2}
                   width={w}
                   height={h}
                   rx={8}
-                  fill={GATE_FILL[op.gate]}
-                   stroke="#292122"
+                  fill={spec.color}
+                  stroke="#292122"
                   strokeWidth={1.4}
                 />
                 <text
@@ -191,12 +207,15 @@ const CircuitScene2D: React.FC = () => {
                   textAnchor="middle"
                   dominantBaseline="central"
                   fill="white"
-                  fontSize={op.gate.length > 1 ? 11 : 14}
+                  fontSize={spec.label.length > 3 ? 9 : spec.label.length > 1 ? 11 : 14}
                   fontWeight={700}
                   style={{ userSelect: 'none', pointerEvents: 'none' }}
                 >
-                  {op.gate}
+                  {spec.label}
                 </text>
+                {spec.targets > 0 && (
+                  <circle cx={cx} cy={cy} r={spec.targets === 2 ? 4 : 3.5} fill="#292122" />
+                )}
               </g>
             );
           })}

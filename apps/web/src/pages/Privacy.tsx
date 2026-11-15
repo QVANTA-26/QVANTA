@@ -1,7 +1,7 @@
 import React from 'react';
 import LegalPageLayout, {
   LegalSection,
-  PLACEHOLDER_CONTACT_EMAIL,
+  CONTACT_EMAIL,
 } from '@/pages/LegalPageLayout';
 
 const PrivacyPage: React.FC = () => {
@@ -136,12 +136,11 @@ const PrivacyPage: React.FC = () => {
           additional notice required for its users or jurisdiction.
         </p>
         <p>
-          Privacy questions or requests: <a className="text-primary-300 underline hover:text-primary-200" href={`mailto:${PLACEHOLDER_CONTACT_EMAIL}`}>
-            [PLACEHOLDER CONTACT EMAIL]
-          </a>{' '}
-          ({PLACEHOLDER_CONTACT_EMAIL}). This is an intentional placeholder and must be replaced with the responsible
-          operator&apos;s monitored privacy contact before production launch. No legal entity or address is represented
-          here.
+          Privacy questions or requests:{' '}
+          <a className="text-primary-300 underline hover:text-primary-200" href={`mailto:${CONTACT_EMAIL}`}>
+            {CONTACT_EMAIL}
+          </a>
+          . Use this address to ask about this notice, your data, or a deletion request.
         </p>
       </LegalSection>
 

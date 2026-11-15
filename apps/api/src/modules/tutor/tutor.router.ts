@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { GATE_IDS } from '@qvanta/types';
 import { JwtAuthGuard, type AuthRequest } from '../auth/auth.middleware';
 import { AppError } from '../../lib/errors';
 import { createConversation, chatWithTutor, listConversations } from './tutor.service';
@@ -10,10 +11,12 @@ export const tutorRouter = Router();
 tutorRouter.use(JwtAuthGuard);
 
 const gateSchema = z.object({
-  gate: z.enum(['H', 'X', 'Y', 'Z', 'CNOT', 'Measure']),
+  gate: z.enum(GATE_IDS),
   qubit: z.number().int().min(0),
   timestep: z.number().int().min(0),
   target: z.number().int().min(0).optional(),
+  target2: z.number().int().min(0).optional(),
+  parameter: z.number().optional(),
 });
 
 const circuitSchema = z.object({

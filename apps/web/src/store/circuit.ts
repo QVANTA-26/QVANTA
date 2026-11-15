@@ -1,8 +1,15 @@
 import { create } from 'zustand';
 import type { Circuit, Gate, GateOp } from '@qvanta/types';
-import { createEmptyCircuit, upsertOperation, removeOperation } from '@/lib/circuit';
+import {
+  GATE_ORDER,
+  GATE_SPECS,
+  defaultTargets,
+  createEmptyCircuit,
+  upsertOperation,
+  removeOperation,
+} from '@/lib/circuit';
 
-export const GATE_PALETTE: Gate[] = ['H', 'X', 'Y', 'Z', 'CNOT', 'Measure'];
+export const GATE_PALETTE: Gate[] = GATE_ORDER;
 
 interface CircuitStoreState extends Circuit {
   selectedGate: Gate | null;
@@ -41,7 +48,10 @@ export const useCircuitStore = create<CircuitStoreState>((set, get) => {
       const clamped = Math.max(1, Math.min(8, Math.floor(n)));
       const cur = get();
       const filtered = cur.operations.filter(
-        (op) => op.qubit < clamped && (op.target === undefined || op.target < clamped)
+        (op) =>
+          op.qubit < clamped &&
+          (op.target === undefined || op.target < clamped) &&
+          (op.target2 === undefined || op.target2 < clamped)
       );
       set({ qubits: clamped, operations: filtered });
     },
@@ -78,8 +88,11 @@ export const useCircuitStore = create<CircuitStoreState>((set, get) => {
         qubit: cur.cursor.qubit,
         timestep: cur.cursor.timestep
       };
-      if (gate === 'CNOT') {
-        op.target = (cur.cursor.qubit + 1) % cur.qubits;
+      const targets = defaultTargets(gate, cur.cursor.qubit, cur.qubits);
+      if (targets.target !== undefined) op.target = targets.target;
+      if (targets.target2 !== undefined) op.target2 = targets.target2;
+      if (GATE_SPECS[gate].parameter) {
+        op.parameter = Math.PI / 2;
       }
       const nextOps = upsertOperation(cur.operations, op);
       set({ operations: nextOps });

@@ -1,3 +1,5 @@
+name: qvanta
+
 services:
   postgres-16:
     image: pgvector/pgvector:pg16
@@ -10,6 +12,12 @@ services:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - qvanta-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qvanta -d qvanta"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
   redis-7:
     image: redis:7-alpine
@@ -17,6 +25,87 @@ services:
       - "6379:6379"
     volumes:
       - qvanta-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  simulator:
+    build:
+      context: ..
+      dockerfile: infra/simulator/Dockerfile
+    environment:
+      PORT: 8000
+      REDIS_URL: redis://redis-7:6379
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis-7:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys,urllib.request; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status == 200 else 1)"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://qvanta:qvanta@postgres-16:5432/qvanta?schema=public
+      REDIS_URL: redis://redis-7:6379
+      SIMULATOR_URL: http://simulator:8000
+      WEB_ORIGIN: http://localhost:8080
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-me}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-jwt-refresh-secret-change-me}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@qvanta.com}
+      # Same dev hash as apps/api/.env.example; dollar signs must be escaped for Compose.
+      ADMIN_PASSWORD_HASH: "$$2b$$12$$QEF.Sv3ccXqUF8peDrnNAeBGcG6JvVgr5GJ8ACbnP8kFSR2D9ADui"
+      SEED_CURRICULUM: "1"
+    # Apply migrations before serving traffic, then start the compiled server.
+    command: sh -c "npx prisma migrate deploy --schema apps/api/prisma/schema.prisma && node apps/api/dist/main.js"
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres-16:
+        condition: service_healthy
+      redis-7:
+        condition: service_healthy
+      simulator:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3001/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/web/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   qvanta-pgdata:

@@ -29,6 +29,29 @@ export interface UserWithTokens {
   tokens: Tokens;
 }
 
+/** Maps a persisted user row to the shape every auth response returns. */
+export function toPublicUser(user: {
+  id: string;
+  email: string;
+  role: UserRole;
+  tier: UserTier;
+  usageMonth: string;
+  usageSims: number;
+  avatarPreset: number;
+  createdAt: Date;
+}): UserWithTokens['user'] {
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    tier: user.tier,
+    usageMonth: user.usageMonth,
+    usageSims: user.usageSims,
+    avatarPreset: user.avatarPreset,
+    createdAt: user.createdAt,
+  };
+}
+
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
 }

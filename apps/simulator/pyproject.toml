@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 name = "qvanta-simulator"
 version = "0.1.0"
 description = "QVANTA Quantum Simulator Microservice"
-readme = "README.md"
 requires-python = ">=3.10,<3.12"
 authors = [
   {name = "QVANTA Team"}

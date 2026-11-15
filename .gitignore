@@ -29,6 +29,10 @@ pip-wheel-metadata
 *.sql
 *.dump
 
+# Prisma migrations are schema history and must stay versioned, so they override
+# the broad *.sql rule above. Root *.dump/*.sql files stay ignored.
+!apps/api/prisma/migrations/**/*.sql
+
 # IDE / Editor
 .vscode
 .idea

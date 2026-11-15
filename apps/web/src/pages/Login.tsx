@@ -5,6 +5,7 @@ import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { isLocalDevHost } from '@/lib/runtime';
 import { getSafeAuthRedirect } from '@/lib/auth-navigation';
+import { describeBiometricError, signInWithBiometrics } from '@/lib/webauthn';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -66,6 +67,24 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const handleBiometricLogin = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const session = await signInWithBiometrics();
+      if (!session.user || !session.tokens?.accessToken) {
+        throw new Error('The sign-in response was incomplete. Please try again.');
+      }
+      setAuth(session.user, session.tokens);
+      navigate(redirectPath, { replace: true });
+    } catch (err: any) {
+      setError(describeBiometricError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthForm
       mode="login"
@@ -77,6 +96,7 @@ const LoginPage: React.FC = () => {
       }
       submitLabel="Sign in"
       onSubmit={handleSubmit}
+      onBiometricLogin={handleBiometricLogin}
       loading={loading}
       error={error}
     />

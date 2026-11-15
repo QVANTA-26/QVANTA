@@ -4,6 +4,7 @@ import AuthForm, { type AuthFormValues } from '@/components/auth/AuthForm';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { getSafeAuthRedirect } from '@/lib/auth-navigation';
+import { createAccountWithBiometrics, describeBiometricError } from '@/lib/webauthn';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -45,6 +46,24 @@ const RegisterPage: React.FC = () => {
     }
   };
 
+  const handleBiometricRegister = async (email: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const session = await createAccountWithBiometrics(email);
+      if (!session.user || !session.tokens?.accessToken) {
+        throw new Error('The registration response was incomplete. Please try again.');
+      }
+      setAuth(session.user, session.tokens);
+      navigate(redirectPath, { replace: true });
+    } catch (err: any) {
+      setError(describeBiometricError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthForm
       mode="register"
@@ -52,6 +71,7 @@ const RegisterPage: React.FC = () => {
       subtitle="Start your quantum learning journey with QVANTA — build circuits, run simulations, and learn with an AI tutor."
       submitLabel="Create account"
       onSubmit={handleSubmit}
+      onBiometricRegister={handleBiometricRegister}
       loading={loading}
       error={error}
     />

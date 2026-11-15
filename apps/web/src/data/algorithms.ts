@@ -51,11 +51,24 @@ export interface AlgorithmDefinition {
   blueprint: AlgorithmCircuitBlueprint;
 }
 
-const operation = (gate: Gate, qubit: number, timestep: number, target?: number): GateOp => ({
+interface OperationDetails {
+  target2?: number;
+  parameter?: number;
+}
+
+const operation = (
+  gate: Gate,
+  qubit: number,
+  timestep: number,
+  target?: number,
+  details: OperationDetails = {},
+): GateOp => ({
   gate,
   qubit,
   timestep,
   ...(typeof target === 'number' ? { target } : {}),
+  ...(details.target2 !== undefined ? { target2: details.target2 } : {}),
+  ...(details.parameter !== undefined ? { parameter: details.parameter } : {}),
 });
 
 const circuit = (qubits: number, timesteps: number, operations: GateOp[]): Circuit => ({
@@ -117,7 +130,7 @@ export const ALGORITHMS: AlgorithmDefinition[] = [
       },
     ],
     blueprint: {
-      circuit: circuit(3, 5, [
+      circuit: circuit(3, 6, [
         operation('X', 2, 0),
         operation('H', 0, 1),
         operation('H', 1, 1),
@@ -126,11 +139,11 @@ export const ALGORITHMS: AlgorithmDefinition[] = [
         operation('CNOT', 1, 2, 3),
         operation('H', 0, 4),
         operation('H', 1, 4),
-        operation('Measure', 0, 4),
-        operation('Measure', 1, 4),
+        operation('Measure', 0, 5),
+        operation('Measure', 1, 5),
       ]),
       focus: 'Oracle phase kickback',
-      explanation: 'A compact Deutsch–Jozsa scaffold: prepare the ancilla, query an oracle-like pair of controlled operations, then interfere the input register.',
+      explanation: 'A real two-input Deutsch–Jozsa circuit for the balanced oracle f(x₀,x₁)=x₀⊕x₁. The ancilla is flipped to |1⟩ and put in |−⟩ by H, the two CNOTs write f(x) into its phase, and the closing Hadamards interfere the input register: a balanced function always leaves a non-zero readout.',
       prediction: 'Before running it, predict whether the input register should end at 00 or show a non-zero bit when the oracle is balanced.',
     },
   },
@@ -186,19 +199,24 @@ export const ALGORITHMS: AlgorithmDefinition[] = [
       },
     ],
     blueprint: {
-      circuit: circuit(2, 5, [
+      circuit: circuit(2, 8, [
         operation('H', 0, 0),
         operation('H', 1, 0),
-        operation('CNOT', 0, 1, 1),
-        operation('X', 1, 2),
-        operation('CNOT', 0, 1, 3),
-        operation('H', 0, 3),
-        operation('H', 1, 3),
-        operation('Measure', 0, 4),
-        operation('Measure', 1, 4),
+        operation('CZ', 0, 1, 1),
+        operation('H', 0, 2),
+        operation('H', 1, 2),
+        operation('X', 0, 3),
+        operation('X', 1, 3),
+        operation('CZ', 0, 4, 1),
+        operation('X', 0, 5),
+        operation('X', 1, 5),
+        operation('H', 0, 6),
+        operation('H', 1, 6),
+        operation('Measure', 0, 7),
+        operation('Measure', 1, 7),
       ]),
       focus: 'Search and interference',
-      explanation: 'The circuit separates preparation, an oracle-like mark, a diffusion-style recombination, and readout.',
+      explanation: 'A complete two-qubit Grover iteration for the marked state |11⟩. H spreads amplitude over all four candidates, the CZ oracle flips the phase of |11⟩, and the diffusion operator H·X·CZ·X·H reflects every amplitude about the mean so the marked state ends near probability 1.',
       prediction: 'Which bitstring should become more likely after the amplification step, and what would a flat histogram mean?',
     },
   },
@@ -254,18 +272,21 @@ export const ALGORITHMS: AlgorithmDefinition[] = [
       },
     ],
     blueprint: {
-      circuit: circuit(3, 6, [
+      circuit: circuit(3, 7, [
+        operation('RY', 0, 0, undefined, { parameter: Math.PI / 4 }),
         operation('H', 1, 0),
         operation('CNOT', 1, 2, 1),
         operation('CNOT', 0, 1, 2),
         operation('H', 0, 3),
-        operation('Measure', 0, 4),
-        operation('Measure', 1, 4),
+        operation('CZ', 0, 4, 2),
         operation('CNOT', 1, 5, 2),
+        operation('Measure', 0, 6),
+        operation('Measure', 1, 6),
+        operation('Measure', 2, 6),
       ]),
       focus: 'Entanglement plus classical correction',
-      explanation: 'This scaffold keeps the teleportation narrative visible: create a Bell pair, interact with the source, measure, then correct the receiver.',
-      prediction: 'Which part of the protocol is quantum, which part is classical, and why can Bob not recover the state before the two bits arrive?',
+      explanation: 'The full teleportation protocol in its deferred-measurement form. q0 holds an unknown state RY(π/4)|0⟩, q1 and q2 share a Bell pair, then CNOT and H spread the source state across q0/q1 while CZ and CNOT perform the two corrections on Bob’s qubit q2 — which ends holding the original state.',
+      prediction: 'Which part of the protocol is quantum, which part is classical, and why can Bob not recover the state before the two correction gates are applied?',
     },
   },
   {
@@ -320,20 +341,20 @@ export const ALGORITHMS: AlgorithmDefinition[] = [
       },
     ],
     blueprint: {
-      circuit: circuit(3, 6, [
+      circuit: circuit(3, 8, [
         operation('H', 0, 0),
-        operation('CNOT', 0, 1, 1),
-        operation('H', 1, 1),
-        operation('CNOT', 1, 2, 2),
-        operation('H', 2, 2),
-        operation('Z', 2, 3),
-        operation('H', 0, 4),
-        operation('Measure', 0, 5),
-        operation('Measure', 1, 5),
-        operation('Measure', 2, 5),
+        operation('CP', 1, 1, 0, { parameter: Math.PI / 2 }),
+        operation('CP', 2, 2, 0, { parameter: Math.PI / 4 }),
+        operation('H', 1, 3),
+        operation('CP', 2, 4, 1, { parameter: Math.PI / 2 }),
+        operation('H', 2, 5),
+        operation('SWAP', 0, 6, 2),
+        operation('Measure', 0, 7),
+        operation('Measure', 1, 7),
+        operation('Measure', 2, 7),
       ]),
       focus: 'Phase structure and frequency bins',
-      explanation: 'A visual QFT scaffold: controlled interactions distribute phase information before the final basis readout.',
+      explanation: 'A complete three-qubit QFT: each Hadamard creates a new phase reference and the controlled-phase gates CP(π/2), CP(π/4) and CP(π/2) fold the lower-frequency phase of every other qubit into it, ending with a SWAP that reorders the register.',
       prediction: 'What should happen to a periodic signal after the transform: stay spread out, or concentrate near a frequency bin?',
     },
   },
@@ -389,22 +410,21 @@ export const ALGORITHMS: AlgorithmDefinition[] = [
       },
     ],
     blueprint: {
-      circuit: circuit(4, 7, [
-        operation('H', 0, 0),
-        operation('H', 1, 0),
-        operation('H', 2, 0),
-        operation('CNOT', 0, 1, 1),
-        operation('CNOT', 1, 2, 2),
-        operation('CNOT', 2, 3, 3),
-        operation('Z', 3, 4),
-        operation('H', 0, 5),
+      circuit: circuit(3, 9, [
+        operation('X', 2, 0),
+        operation('H', 0, 1),
+        operation('H', 1, 1),
+        operation('CP', 0, 2, 2, { parameter: Math.PI / 2 }),
+        operation('CP', 1, 3, 2, { parameter: Math.PI / 4 }),
+        operation('SWAP', 0, 4, 1),
         operation('H', 1, 5),
-        operation('Measure', 0, 6),
-        operation('Measure', 1, 6),
-        operation('Measure', 2, 6),
+        operation('CP', 1, 6, 0, { parameter: -Math.PI / 2 }),
+        operation('H', 0, 7),
+        operation('Measure', 0, 8),
+        operation('Measure', 1, 8),
       ]),
       focus: 'Period finding and QFT',
-      explanation: 'A teaching scaffold for Shor’s architecture: prepare a phase register, imprint periodic structure, then expose it with Fourier interference.',
+      explanation: 'A period-finding core in miniature: q0/q1 are superposed into every candidate exponent, controlled-phase gates on the work qubit q2 imprint the modular phase aˣ mod N, and the inverse QFT (SWAP, H, CP(−π/2), H) turns that repeating phase into a measurable frequency that classical continued fractions convert into factors.',
       prediction: 'Why does the algorithm spend quantum resources finding a period and classical resources turning that period into factors?',
     },
   },
@@ -461,15 +481,17 @@ export const ALGORITHMS: AlgorithmDefinition[] = [
     ],
     blueprint: {
       circuit: circuit(2, 5, [
-        operation('H', 0, 0),
+        operation('RY', 0, 0, undefined, { parameter: Math.PI / 4 }),
+        operation('RY', 1, 0, undefined, { parameter: Math.PI / 3 }),
         operation('CNOT', 0, 1, 1),
-        operation('Y', 0, 2),
-        operation('X', 1, 2),
+        operation('RZ', 0, 2, undefined, { parameter: Math.PI / 2 }),
+        operation('RZ', 1, 2, undefined, { parameter: Math.PI / 4 }),
+        operation('CNOT', 1, 3, 0),
         operation('Measure', 0, 4),
         operation('Measure', 1, 4),
       ]),
       focus: 'Parameterized circuit and energy feedback',
-      explanation: 'A small variational scaffold: prepare a correlated state, perturb parameters, and read a measurement that stands in for the objective.',
+      explanation: 'A genuine two-qubit variational ansatz: RY(π/4) and RY(π/3) set the initial state, a CNOT entangles the qubits, RZ(π/2) and RZ(π/4) add the tunable phases, and a second CNOT in the other direction completes the entangling layer. The optimizer repeatedly re-runs these angles and reads the measurements as the energy score.',
       prediction: 'If the optimizer lowers the measured energy, what should happen to the next parameter update and the landscape marker?',
     },
   },

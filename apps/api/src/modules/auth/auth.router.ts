@@ -1,4 +1,4 @@
-import { Router, type Response } from 'express';
+import { Router } from 'express';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { z } from 'zod';
@@ -10,6 +10,8 @@ import {
   findOrCreateGoogleUser,
   issueTokensForUser,
 } from './auth.service';
+import { clearRefreshCookie, setRefreshCookie } from './auth.cookies';
+import { webauthnRouter } from './webauthn.router';
 import { logger } from '../../lib/logger';
 import { AppError } from '../../lib/errors';
 
@@ -38,15 +40,6 @@ const hasUsableGoogleConfig = Boolean(
     !googleClientId.startsWith('your-') &&
     !googleClientSecret.startsWith('your-')
 );
-
-const setRefreshCookie = (res: Response, refreshToken: string): void => {
-  res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-};
 
 if (googleClientId && googleClientSecret && hasUsableGoogleConfig) {
   passport.use(
@@ -83,6 +76,11 @@ if (googleClientId && googleClientSecret && hasUsableGoogleConfig) {
     done(null, obj as Express.User);
   });
 }
+
+// Face / fingerprint (passkey) sign-up and sign-in. Kept as a sub-router so the
+// biometric ceremony reuses the exact same cookie + response contract as the
+// password endpoints above.
+authRouter.use('/webauthn', webauthnRouter);
 
 authRouter.post('/register', async (req, res, next) => {
   try {
@@ -147,11 +145,7 @@ authRouter.post('/logout', async (req, res, next) => {
     if (cookieToken) {
       await revokeRefreshToken(cookieToken);
     }
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    });
+    clearRefreshCookie(res);
     res.status(204).end();
   } catch (err) {
     next(err);

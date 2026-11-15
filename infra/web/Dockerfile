@@ -7,6 +7,11 @@ COPY apps ./apps
 COPY packages ./packages
 
 RUN npm ci
+
+# Tailwind imports the "tailwind-preset" subpath from @qvanta/ui, which only
+# resolves once that package has been built.
+RUN npm --workspace @qvanta/types run build
+RUN npm --workspace @qvanta/ui run build
 RUN npm run build --workspace web
 
 FROM nginx:1.27-alpine AS runtime

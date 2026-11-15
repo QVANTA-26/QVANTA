@@ -1,7 +1,7 @@
 import React from 'react';
 import LegalPageLayout, {
   LegalSection,
-  PLACEHOLDER_CONTACT_EMAIL,
+  CONTACT_EMAIL,
 } from '@/pages/LegalPageLayout';
 
 const TermsPage: React.FC = () => {
@@ -152,11 +152,11 @@ const TermsPage: React.FC = () => {
           if a change matters to you, stop using the service and contact the operator.
         </p>
         <p>
-          Contact address: <a className="text-primary-300 underline hover:text-primary-200" href={`mailto:${PLACEHOLDER_CONTACT_EMAIL}`}>
-            [PLACEHOLDER CONTACT EMAIL]
-          </a>{' '}
-          ({PLACEHOLDER_CONTACT_EMAIL}). This is an intentional placeholder and must be replaced with the responsible
-          operator&apos;s monitored address before production launch. No legal entity or address is represented here.
+          Contact address:{' '}
+          <a className="text-primary-300 underline hover:text-primary-200" href={`mailto:${CONTACT_EMAIL}`}>
+            {CONTACT_EMAIL}
+          </a>
+          . Use this address for questions about these terms, account issues, or security concerns.
         </p>
       </LegalSection>
 
