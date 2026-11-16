@@ -166,7 +166,7 @@ flowchart TD
 
 <img src="assets/divider.svg" width="100%" alt=""/>
 
-## 🗂️ Monorepo Structure
+##  Monorepo Structure
 
 ```
 .
@@ -187,7 +187,7 @@ flowchart TD
 
 <img src="assets/divider.svg" width="100%" alt=""/>
 
-## ⚡ Quick Start
+##  Quick Start
 
 > **10 steps · 5–10 minutes**
 
@@ -267,12 +267,12 @@ Terminal 3:
 npm --workspace web run dev
 ```
 
-Vite proxies `/api` → `localhost:3001`. Open **http://localhost:5173** 🎉
+Vite proxies `/api` → `localhost:3001`. Open **http://localhost:5173** 
 
 ### `10` &nbsp; Smoke-test the MVP happy path
 
 <details open>
-<summary><b>✅ Checklist (click to collapse)</b></summary>
+<summary><b> Checklist (click to collapse)</b></summary>
 
 <br/>
 
