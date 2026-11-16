@@ -146,7 +146,7 @@ By creating an account or continuing to use QVANTA, you acknowledge that you hav
 
 
 
-**QVANTA** · Terms of Service · Last updated October 18, 2026
+**QVANTA** · Terms of Service · Last updated November 16, 2026
 
 Questions? Write to [qvanta26@gmail.com](mailto:qvanta26@gmail.com) or [qvantaindustry2026@gmail.com](mailto:qvantaindustry2026@gmail.com)
 
