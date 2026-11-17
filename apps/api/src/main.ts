@@ -24,7 +24,13 @@ import { seedCurriculumModules } from './seeders/curriculum';
 function createApp(): Express {
   const app = express();
 
-  app.use(helmet());
+  // `cross-origin` on the resource policy lets the separately hosted web app
+  // render profile photos straight from this API via `<img src>`.
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    })
+  );
 
   const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:5173';
   const allowedOrigins = [

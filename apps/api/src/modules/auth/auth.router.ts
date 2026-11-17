@@ -9,6 +9,8 @@ import {
   revokeRefreshToken,
   findOrCreateGoogleUser,
   issueTokensForUser,
+  resendVerificationEmail,
+  verifyEmailAndSignIn,
 } from './auth.service';
 import { clearRefreshCookie, setRefreshCookie } from './auth.cookies';
 import { webauthnRouter } from './webauthn.router';
@@ -29,6 +31,14 @@ const loginSchema = z.object({
 
 const refreshSchema = z.object({
   refreshToken: z.string().trim().min(1),
+});
+
+const verifyEmailSchema = z.object({
+  token: z.string().trim().min(1),
+});
+
+const resendVerificationSchema = z.object({
+  email: z.string().trim().email().transform((value) => value.toLowerCase()),
 });
 
 const GOOGLE_CALLBACK_PATH = '/auth/google/callback';
@@ -88,12 +98,44 @@ authRouter.post('/register', async (req, res, next) => {
     if (!parsed.success) {
       throw AppError.validation('Invalid input', parsed.error.flatten());
     }
+    // No session is issued yet: the account stays inert until the learner
+    // confirms the mailbox from the emailed link.
     const result = await registerUser(parsed.data);
-    setRefreshCookie(res, result.tokens.refreshToken);
     res.status(201).json({
+      user: result.user,
+      verificationRequired: true,
+      emailSent: result.emailSent,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+authRouter.post('/verify-email', async (req, res, next) => {
+  try {
+    const parsed = verifyEmailSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw AppError.validation('Invalid input', parsed.error.flatten());
+    }
+    const result = await verifyEmailAndSignIn(parsed.data.token);
+    setRefreshCookie(res, result.tokens.refreshToken);
+    res.status(200).json({
       user: result.user,
       tokens: { accessToken: result.tokens.accessToken },
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+authRouter.post('/resend-verification', async (req, res, next) => {
+  try {
+    const parsed = resendVerificationSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw AppError.validation('Invalid input', parsed.error.flatten());
+    }
+    const result = await resendVerificationEmail(parsed.data.email);
+    res.status(200).json({ ok: true, emailSent: result.emailSent });
   } catch (err) {
     next(err);
   }

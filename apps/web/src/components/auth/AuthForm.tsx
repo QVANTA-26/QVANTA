@@ -16,6 +16,8 @@ interface AuthFormProps {
   onBiometricRegister?: (email: string) => Promise<void>;
   loading?: boolean;
   error?: string | null;
+  /** Rendered under the error banner, e.g. a "resend confirmation link" action. */
+  errorAction?: React.ReactNode;
 }
 
 export interface AuthFormValues {
@@ -34,6 +36,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
   onBiometricRegister,
   loading,
   error,
+  errorAction,
 }) => {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -244,6 +247,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
                 {error}
               </div>
             ) : null}
+
+            {errorAction ? <div className="space-y-2">{errorAction}</div> : null}
 
             {localDemoAvailable && (
               <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3 text-xs text-text-400">

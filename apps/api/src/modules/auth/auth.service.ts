@@ -5,10 +5,15 @@ import {
   generateTokenPair,
   hashToken,
   verifyRefreshToken as verifyRefresh,
-  type JwtPayload,
 } from '../../lib/jwt';
 import { logger } from '../../lib/logger';
-import type { UserRole, UserTier } from '@qvanta/types';
+import {
+  buildEmailVerificationUrl,
+  signEmailVerificationToken,
+  verifyEmailVerificationToken,
+} from '../../lib/email-verification';
+import { sendEmailVerificationMail } from '../../lib/mailer';
+import type { User as PublicUser, UserRole, UserTier } from '@qvanta/types';
 
 export interface Tokens {
   accessToken: string;
@@ -16,39 +21,54 @@ export interface Tokens {
 }
 
 export interface UserWithTokens {
-  user: {
-    id: string;
-    email: string;
-    role: UserRole;
-    tier: UserTier;
-    usageMonth: string;
-    usageSims: number;
-    avatarPreset: number;
-    createdAt: Date;
-  };
+  user: PublicUser;
   tokens: Tokens;
 }
 
-/** Maps a persisted user row to the shape every auth response returns. */
-export function toPublicUser(user: {
+/** Sign-up result: the account exists but cannot sign in until the email is confirmed. */
+export interface PendingVerification {
+  user: PublicUser;
+  /** False when SMTP is not configured, so the UI can tell the operator to look at the logs. */
+  emailSent: boolean;
+}
+
+/** The user row shape `toPublicUser` needs; `profileImage` is only present when it was included. */
+interface UserRow {
   id: string;
   email: string;
+  displayName: string | null;
+  emailVerified: boolean;
   role: UserRole;
   tier: UserTier;
   usageMonth: string;
   usageSims: number;
   avatarPreset: number;
+  stripeCustomerId: string | null;
   createdAt: Date;
-}): UserWithTokens['user'] {
+  profileImage?: { updatedAt: Date } | null;
+}
+
+/**
+ * Maps a persisted user row to the shape every auth response returns. The
+ * password hash and Google id never leave the server; `avatarUrl` is a path the
+ * web client resolves against the API base URL and uses as a cache-buster.
+ */
+export function toPublicUser(user: UserRow): PublicUser {
   return {
     id: user.id,
     email: user.email,
+    displayName: user.displayName ?? undefined,
+    emailVerified: user.emailVerified,
     role: user.role,
     tier: user.tier,
     usageMonth: user.usageMonth,
     usageSims: user.usageSims,
     avatarPreset: user.avatarPreset,
-    createdAt: user.createdAt,
+    avatarUrl: user.profileImage
+      ? `/users/${user.id}/avatar?v=${user.profileImage.updatedAt.getTime()}`
+      : undefined,
+    createdAt: user.createdAt.toISOString(),
+    stripeCustomerId: user.stripeCustomerId ?? undefined,
   };
 }
 
@@ -85,42 +105,103 @@ export async function issueTokensForUser(user: {
   return tokens;
 }
 
+/** Sends (or re-sends) the confirmation link. Returns false when SMTP is unset. */
+export async function sendVerificationEmailForUser(user: {
+  id: string;
+  email: string;
+  displayName?: string | null;
+}): Promise<boolean> {
+  const token = signEmailVerificationToken({ userId: user.id, email: user.email });
+
+  try {
+    return await sendEmailVerificationMail({
+      to: user.email,
+      displayName: user.displayName,
+      verifyUrl: buildEmailVerificationUrl(token),
+    });
+  } catch (err) {
+    logger.error(
+      `Failed to send verification email to ${user.email}: ${err instanceof Error ? err.message : String(err)}`
+    );
+    return false;
+  }
+}
+
 export async function registerUser(input: {
   email: string;
   password: string;
-}): Promise<UserWithTokens> {
+}): Promise<PendingVerification> {
   const emailLower = input.email.toLowerCase();
 
   const existing = await prisma.user.findUnique({ where: { email: emailLower } });
+
+  let user;
   if (existing) {
-    throw AppError.conflict('Email already registered');
+    // A passkey sign-up that was cancelled mid-ceremony leaves an unverified
+    // shell with no credentials; reuse it instead of dead-ending the address.
+    const isAbandonedShell =
+      !existing.emailVerified && !existing.passwordHash && !existing.googleId;
+
+    if (!isAbandonedShell) {
+      throw AppError.conflict('Email already registered. Sign in instead.');
+    }
+
+    user = await prisma.user.update({
+      where: { id: existing.id },
+      data: { passwordHash: await hashPassword(input.password) },
+    });
+  } else {
+    user = await prisma.user.create({
+      data: {
+        email: emailLower,
+        passwordHash: await hashPassword(input.password),
+      },
+    });
   }
 
-  const passwordHash = await hashPassword(input.password);
-  const user = await prisma.user.create({
-    data: {
-      email: emailLower,
-      passwordHash,
-    },
-  });
+  const emailSent = await sendVerificationEmailForUser(user);
+  logger.info(`User registered, verification pending: ${user.id}`);
 
-  const tokens = await issueTokensForUser(user);
+  return { user: toPublicUser(user), emailSent };
+}
 
-  logger.info(`User registered: ${user.id}`);
+/**
+ * Confirms ownership of the mailbox and signs the learner straight in, so the
+ * verification click is the only extra step after sign-up.
+ */
+export async function verifyEmailAndSignIn(token: string): Promise<UserWithTokens> {
+  const claims = verifyEmailVerificationToken(token);
 
-  return {
-    user: {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      tier: user.tier,
-      usageMonth: user.usageMonth,
-      usageSims: user.usageSims,
-      avatarPreset: user.avatarPreset,
-      createdAt: user.createdAt,
-    },
-    tokens,
-  };
+  const user = await prisma.user.findUnique({ where: { id: claims.userId } });
+  if (!user) {
+    throw AppError.notFound('This account no longer exists.');
+  }
+  if (user.email !== claims.email) {
+    throw AppError.badRequest('This verification link does not match the account. Request a new one.');
+  }
+
+  const verified = user.emailVerified
+    ? user
+    : await prisma.user.update({ where: { id: user.id }, data: { emailVerified: true } });
+
+  const tokens = await issueTokensForUser(verified);
+  logger.info(`Email verified for user: ${verified.id}`);
+
+  return { user: toPublicUser(verified), tokens };
+}
+
+/**
+ * Resends the confirmation link. The response never reveals whether the address
+ * is registered, so this cannot be used to enumerate accounts.
+ */
+export async function resendVerificationEmail(email: string): Promise<{ emailSent: boolean }> {
+  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+
+  if (!user || user.emailVerified) {
+    return { emailSent: false };
+  }
+
+  return { emailSent: await sendVerificationEmailForUser(user) };
 }
 
 export async function loginUser(input: {
@@ -128,7 +209,10 @@ export async function loginUser(input: {
   password: string;
 }): Promise<UserWithTokens> {
   const emailLower = input.email.toLowerCase();
-  const user = await prisma.user.findUnique({ where: { email: emailLower } });
+  const user = await prisma.user.findUnique({
+    where: { email: emailLower },
+    include: { profileImage: { select: { updatedAt: true } } },
+  });
 
   if (!user || !user.passwordHash) {
     throw AppError.unauthorized('Invalid email or password');
@@ -139,23 +223,21 @@ export async function loginUser(input: {
     throw AppError.unauthorized('Invalid email or password');
   }
 
+  // Checked after the password so an unconfirmed address is never disclosed to
+  // someone who does not already hold the credentials.
+  if (!user.emailVerified) {
+    throw new AppError(
+      'EMAIL_NOT_VERIFIED',
+      'Verify your email address before signing in. We can send you a new confirmation link.',
+      403
+    );
+  }
+
   const tokens = await issueTokensForUser(user);
 
   logger.info(`User logged in: ${user.id}`);
 
-  return {
-    user: {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      tier: user.tier,
-      usageMonth: user.usageMonth,
-      usageSims: user.usageSims,
-      avatarPreset: user.avatarPreset,
-      createdAt: user.createdAt,
-    },
-    tokens,
-  };
+  return { user: toPublicUser(user), tokens };
 }
 
 export async function refreshTokens(refreshToken: string): Promise<Tokens> {
@@ -188,6 +270,10 @@ export async function revokeRefreshToken(refreshToken: string): Promise<void> {
   });
 }
 
+/**
+ * Google has already verified the mailbox it hands us, so those accounts are
+ * created pre-verified and never need the confirmation link.
+ */
 export async function findOrCreateGoogleUser(profile: {
   id: string;
   email: string;
@@ -204,10 +290,11 @@ export async function findOrCreateGoogleUser(profile: {
   if (!user) {
     user = await prisma.user.upsert({
       where: { email: emailLower },
-      update: { googleId: profile.id },
+      update: { googleId: profile.id, emailVerified: true },
       create: {
-        email: emailLower, 
+        email: emailLower,
         googleId: profile.id,
+        emailVerified: true,
       },
     });
   }
@@ -236,18 +323,4 @@ async function saveRefreshToken(userId: string, token: string): Promise<void> {
   await prisma.refreshToken.deleteMany({
     where: { userId, expiresAt: { lt: new Date() } },
   });
-}
-
-export function toJwtPayload(user: {
-  id: string;
-  email: string;
-  role: UserRole;
-  tier: UserTier;
-}): JwtPayload {
-  return {
-    id: user.id,
-    email: user.email,
-    role: user.role,
-    tier: user.tier,
-  };
 }

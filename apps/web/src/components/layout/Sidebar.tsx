@@ -5,6 +5,7 @@ import { twMerge } from 'tailwind-merge';
 import { useAuthStore } from '@/store/auth';
 import { useUIStore } from '@/store/ui';
 import { LogoMark } from '@/components/ui/Logo';
+import UserAvatar, { displayNameOf } from '@/components/ui/UserAvatar';
 
 function cn(...inputs: (string | undefined | null | false)[]): string {
   return twMerge(clsx(inputs));
@@ -239,7 +240,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       : user?.tier === 'institution'
       ? 'Institution'
       : 'Free Plan';
-  const userLabel = user?.email ?? 'User';
+  const userLabel = displayNameOf(user);
+  const userEmail = user?.email ?? 'User';
 
   const closeMobileSidebar = () => {
     setSidebarOpen(false);
@@ -363,12 +365,15 @@ const Sidebar: React.FC<SidebarProps> = ({
             collapsed ? 'justify-center p-2' : 'items-center gap-3 p-3'
           )}
           role="group"
-          aria-label={`${userLabel}, ${planLabel}`}
+          aria-label={`${userLabel} (${userEmail}), ${planLabel}`}
           title={collapsed ? `${userLabel} · ${planLabel}` : undefined}
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(109,0,26,0.28)]">
-            {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
-          </div>
+          <UserAvatar
+            user={user}
+            size={36}
+            className="shadow-[0_8px_20px_rgba(109,0,26,0.28)]"
+            textClassName="text-sm font-semibold text-white"
+          />
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium text-text-100">{userLabel}</div>

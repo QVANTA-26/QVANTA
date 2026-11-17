@@ -47,6 +47,18 @@ webauthnRouter.post('/register/verify', async (req, res, next) => {
       parsed.data.challengeToken,
       parsed.data.response as unknown as RegistrationResponseJSON
     );
+
+    // A passkey proves this device, not the mailbox, so a fresh account is left
+    // pending until the emailed link is confirmed — same gate as /auth/register.
+    if (!('tokens' in result)) {
+      res.status(201).json({
+        user: result.user,
+        verificationRequired: true,
+        emailSent: result.emailSent,
+      });
+      return;
+    }
+
     setRefreshCookie(res, result.tokens.refreshToken);
     res.status(201).json({
       user: result.user,

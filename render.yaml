@@ -53,6 +53,21 @@ services:
       # Optional integrations - leave blank to disable the feature.
       - key: ANTHROPIC_API_KEY
         sync: false
+      # Transactional email (email verification links). Gmail SMTP example:
+      # SMTP_HOST=smtp.gmail.com, SMTP_PORT=587, SMTP_USER=you@gmail.com,
+      # SMTP_PASS=<16-char Gmail App Password>.
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: EMAIL_VERIFICATION_SECRET
+        sync: false
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_PUBLISHABLE_KEY

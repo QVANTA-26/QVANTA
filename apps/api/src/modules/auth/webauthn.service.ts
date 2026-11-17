@@ -19,7 +19,11 @@ import {
   signWebAuthnChallenge,
   verifyWebAuthnChallenge,
 } from '../../lib/webauthn';
-import { issueTokensForUser, toPublicUser, type UserWithTokens } from './auth.service';
+import { issueTokensForUser, toPublicUser, sendVerificationEmailForUser } from './auth.service';
+import type {
+  PendingVerification,
+  UserWithTokens,
+} from './auth.service';
 
 const RP_NAME = 'QVANTA';
 const CREDENTIAL_FAILURE_MESSAGE =
@@ -81,8 +85,12 @@ export async function startPasskeyRegistration(email: string): Promise<PasskeyRe
       transports: transportsOf(credential.transports),
     })),
     // `residentKey: required` makes the credential a true passkey, which is what
-    // allows the usernameless sign-in flow below.
+    // allows the usernameless sign-in flow below. `authenticatorAttachment:
+    // 'platform'` pins it to the device's built-in biometrics (Face ID, Touch
+    // ID, Windows Hello, Android fingerprint), so signing in always asks for a
+    // face or fingerprint rather than a roaming security key.
     authenticatorSelection: {
+      authenticatorAttachment: 'platform',
       residentKey: 'required',
       userVerification: 'required',
     },
@@ -99,14 +107,15 @@ export async function startPasskeyRegistration(email: string): Promise<PasskeyRe
 }
 
 /**
- * Step 2 of passkey sign-up. Stores the credential and issues a session with the
- * same `issueTokensForUser` helper the password and Google flows use, so token
- * issuance cost is identical.
+ * Step 2 of passkey sign-up. Stores the credential and then follows the same
+ * email-verification gate as the password flow: a passkey proves this device,
+ * not the mailbox, so a fresh account only gets a session once its email is
+ * confirmed.
  */
 export async function finishPasskeyRegistration(
   challengeToken: string,
   response: RegistrationResponseJSON
-): Promise<UserWithTokens> {
+): Promise<UserWithTokens | PendingVerification> {
   const challenge = verifyWebAuthnChallenge(challengeToken, 'registration');
   if (!challenge.userId) {
     throw AppError.unauthorized('This biometric sign-up request is not valid. Please try again.');
@@ -155,9 +164,16 @@ export async function finishPasskeyRegistration(
     throw AppError.unauthorized('Account not found. Please try again.');
   }
 
-  const tokens = await issueTokensForUser(user);
   logger.info(`Passkey registered for user: ${user.id}`);
 
+  if (!user.emailVerified) {
+    return {
+      user: toPublicUser(user),
+      emailSent: await sendVerificationEmailForUser(user),
+    };
+  }
+
+  const tokens = await issueTokensForUser(user);
   return { user: toPublicUser(user), tokens };
 }
 
@@ -235,6 +251,15 @@ export async function finishPasskeyLogin(
   const user = await prisma.user.findUnique({ where: { id: stored.userId } });
   if (!user) {
     throw AppError.unauthorized('Account not found. Please try again.');
+  }
+
+  // Same gate as password sign-in: an unconfirmed mailbox cannot start a session.
+  if (!user.emailVerified) {
+    throw new AppError(
+      'EMAIL_NOT_VERIFIED',
+      'Verify your email address before signing in. We can send you a new confirmation link.',
+      403
+    );
   }
 
   const tokens = await issueTokensForUser(user);

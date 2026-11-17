@@ -5,20 +5,23 @@ import {
   Button,
   Card,
   CardContent,
+  Input,
   Badge
 } from '@qvanta/ui';
 import { apiClient } from '@/lib/api-client';
 import { useCurriculumProgress } from '@/hooks/useCurriculumProgress';
 import { useAuthStore } from '@/store/auth';
+import UserAvatar, { displayNameOf } from '@/components/ui/UserAvatar';
+import ImageCropModal from '@/components/ui/ImageCropModal';
 import type { AvatarPresetId } from '@qvanta/ui';
 import type { User, SubscriptionTier } from '@qvanta/types';
 
 const DEFAULT_FREE_TIER_CAP = 50;
-const PROFILE_AVATAR_KEY = 'qvanta.dashboard.profileAvatar';
 const ACTIVITY_KEY = 'qvanta.dashboard.activity';
 const FIRST_SESSION_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 const TOAST_DURATION_MS = 4500;
 const HEATMAP_WEEKS = 52;
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 // Set this to the real number of modules in your curriculum.
 const TOTAL_MODULES = 20;
 
@@ -180,8 +183,17 @@ const DashboardPage: React.FC = () => {
   const [checkoutLoading, setCheckoutLoading] = React.useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = React.useState(false);
   const [savingAvatarPreset, setSavingAvatarPreset] = React.useState(false);
-  const [profileAvatar, setProfileAvatar] = React.useState<string | null>(null);
   const [activity, setActivity] = React.useState<ActivityMap>({});
+
+  // Profile photo: picked file goes through the cropper before it is uploaded.
+  const [cropFile, setCropFile] = React.useState<File | null>(null);
+  const [cropOpen, setCropOpen] = React.useState(false);
+  const [savingPhoto, setSavingPhoto] = React.useState(false);
+
+  // Display name: prompted once right after sign-up, editable later.
+  const [nameFormOpen, setNameFormOpen] = React.useState(false);
+  const [nameDraft, setNameDraft] = React.useState('');
+  const [savingName, setSavingName] = React.useState(false);
 
   const toastTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -198,17 +210,7 @@ const DashboardPage: React.FC = () => {
   }, []);
 
   const userKey = user?.id ?? authUser?.id ?? 'anon';
-  const avatarStorageKey = `${PROFILE_AVATAR_KEY}.${userKey}`;
   const activityStorageKey = `${ACTIVITY_KEY}.${userKey}`;
-
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      setProfileAvatar(window.localStorage.getItem(avatarStorageKey));
-    } catch {
-      setProfileAvatar(null);
-    }
-  }, [avatarStorageKey]);
 
   // Local activity log: marks today as active on this device.
   // Swap this for real data (e.g. from your progress API) when it exists.
@@ -292,13 +294,8 @@ const DashboardPage: React.FC = () => {
   const currentPreset: AvatarPresetId = (Number.isFinite(rawAvatarPreset)
     ? Math.max(0, Math.min(2, rawAvatarPreset))
     : 0) as AvatarPresetId;
-  const profileName = user?.email?.split('@')[0] ?? 'Quantum learner';
-  const profileInitials = profileName.slice(0, 2).toUpperCase();
-  const avatarShapeClass = currentPreset === 1
-    ? 'rounded-xl bg-accent-500'
-    : currentPreset === 2
-      ? 'rounded-[50%] bg-primary-400'
-      : 'rounded-full bg-primary-500';
+  const profileName = displayNameOf(user);
+  const needsName = !user?.displayName?.trim();
 
   const completedModules = Object.values(curriculumProgress).filter((status) => status === 'completed').length;
   const startedModules = Object.values(curriculumProgress).filter(
@@ -322,12 +319,16 @@ const DashboardPage: React.FC = () => {
     [activity],
   );
 
+  const applyUpdatedUser = (updated: User) => {
+    setLocalUser(updated);
+    setUser(updated);
+  };
+
   const handleAvatarPresetChange = async (presetId: AvatarPresetId) => {
     setSavingAvatarPreset(true);
     try {
       const res = await apiClient.patch<User>('/users/me', { avatarPreset: Number(presetId) });
-      setLocalUser(res.data);
-      setUser(res.data);
+      applyUpdatedUser(res.data);
     } catch (err: any) {
       showToast('error', err?.response?.data?.error?.message ?? 'Failed to update avatar');
     } finally {
@@ -335,40 +336,75 @@ const DashboardPage: React.FC = () => {
     }
   };
 
-  const handleProfileAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      showToast('error', 'Choose an image file for your profile face.');
+      showToast('error', 'Choose an image file for your profile photo.');
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      showToast('error', 'Please choose an image smaller than 2 MB.');
+    if (file.size > MAX_UPLOAD_BYTES) {
+      showToast('error', 'Please choose an image smaller than 8 MB.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const value = typeof reader.result === 'string' ? reader.result : null;
-      if (!value) return;
-      try {
-        window.localStorage.setItem(avatarStorageKey, value);
-        setProfileAvatar(value);
-      } catch {
-        showToast('error', 'This browser could not save the profile image locally.');
-      }
-    };
-    reader.readAsDataURL(file);
+    setCropFile(file);
+    setCropOpen(true);
   };
 
-  const removeProfileAvatar = () => {
+  const handleCropConfirm = async (dataUrl: string) => {
+    setSavingPhoto(true);
     try {
-      window.localStorage.removeItem(avatarStorageKey);
-    } catch {
-      // best-effort
+      const res = await apiClient.post<User>('/users/me/avatar', { dataUrl });
+      applyUpdatedUser(res.data);
+      setCropOpen(false);
+      setCropFile(null);
+      showToast('success', 'Profile photo updated everywhere.');
+    } catch (err: any) {
+      showToast('error', err?.response?.data?.error?.message ?? 'Failed to save your photo');
+    } finally {
+      setSavingPhoto(false);
     }
-    setProfileAvatar(null);
   };
+
+  const handleRemovePhoto = async () => {
+    setSavingPhoto(true);
+    try {
+      const res = await apiClient.delete<User>('/users/me/avatar');
+      applyUpdatedUser(res.data);
+      showToast('success', 'Profile photo removed.');
+    } catch (err: any) {
+      showToast('error', err?.response?.data?.error?.message ?? 'Failed to remove your photo');
+    } finally {
+      setSavingPhoto(false);
+    }
+  };
+
+  const openNameForm = () => {
+    setNameDraft(user?.displayName ?? '');
+    setNameFormOpen(true);
+  };
+
+  const handleSaveName = async () => {
+    const trimmed = nameDraft.trim();
+    if (trimmed.length < 2) {
+      showToast('error', 'Your name must be at least 2 characters.');
+      return;
+    }
+    setSavingName(true);
+    try {
+      const res = await apiClient.patch<User>('/users/me', { displayName: trimmed });
+      applyUpdatedUser(res.data);
+      setNameFormOpen(false);
+      showToast('success', 'Your name has been saved.');
+    } catch (err: any) {
+      showToast('error', err?.response?.data?.error?.message ?? 'Failed to save your name');
+    } finally {
+      setSavingName(false);
+    }
+  };
+
+  const showNamePrompt = nameFormOpen || needsName;
 
   if (loading) {
     return (
@@ -400,24 +436,54 @@ const DashboardPage: React.FC = () => {
         </div>
       )}
 
+      {showNamePrompt && (
+        <Card>
+          <CardContent className="space-y-3 p-5">
+            <div>
+              <h2 className="text-base font-semibold text-text-100">
+                {needsName ? 'Choose your name' : 'Edit your name'}
+              </h2>
+              <p className="mt-1 text-sm text-text-400">
+                This is how you will appear across QVANTA — lessons, the tutor and your profile.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="min-w-[220px] flex-1">
+                <Input
+                  id="display-name"
+                  label="Your name"
+                  value={nameDraft}
+                  maxLength={40}
+                  onChange={(event) => setNameDraft(event.target.value)}
+                  placeholder="e.g. Shivang"
+                  autoComplete="name"
+                  disabled={savingName}
+                />
+              </div>
+              <Button variant="primary" onClick={() => void handleSaveName()} loading={savingName}>
+                Save name
+              </Button>
+              {!needsName && (
+                <Button variant="ghost" onClick={() => setNameFormOpen(false)} disabled={savingName}>
+                  Cancel
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
         {/* ============ LEFT: profile sidebar ============ */}
         <aside className="space-y-4">
           <Card>
             <CardContent className="space-y-5 p-5">
               <div className="flex items-center gap-4">
-                <div
-                  className={`flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden border-2 border-white/10 text-xl font-bold text-white shadow-inner ${avatarShapeClass}`}
-                  {...(profileAvatar ? {} : { role: 'img', 'aria-label': `${profileName}'s avatar` })}
-                >
-                  {profileAvatar ? (
-                    <img
-                      src={profileAvatar}
-                      alt={`${profileName}'s uploaded profile photo`}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : profileInitials}
-                </div>
+                <UserAvatar
+                  user={user}
+                  size={80}
+                  className="border-2 border-white/10 shadow-inner text-xl"
+                />
                 <div className="min-w-0">
                   <h1 className="truncate text-xl font-semibold text-text-100">{profileName}</h1>
                   <p className="truncate text-sm text-text-400">{user?.email ?? 'Quantum learner'}</p>
@@ -444,7 +510,7 @@ const DashboardPage: React.FC = () => {
                   onClick={() => setShowAvatarPicker((visible) => !visible)}
                   aria-expanded={showAvatarPicker}
                 >
-                  {showAvatarPicker ? 'Close' : 'Avatar'}
+                  {showAvatarPicker ? 'Close' : 'Profile'}
                 </Button>
               </div>
 
@@ -452,20 +518,23 @@ const DashboardPage: React.FC = () => {
                 <div className="border-t border-bg-800 pt-4">
                   <div className="mb-4 flex flex-wrap items-center gap-2">
                     <label className="inline-flex h-9 cursor-pointer items-center rounded-md border border-accent-500/35 bg-accent-500/10 px-3 text-xs font-medium text-accent-200 transition hover:border-accent-400/60 hover:bg-accent-500/15">
-                      Upload your face
+                      Upload &amp; crop photo
                       <input
                         type="file"
                         accept="image/*"
                         className="sr-only"
-                        onChange={handleProfileAvatarUpload}
+                        onChange={handlePhotoSelected}
                       />
                     </label>
-                    {profileAvatar && (
-                      <Button variant="ghost" size="sm" onClick={removeProfileAvatar}>
+                    {user?.avatarUrl && (
+                      <Button variant="ghost" size="sm" onClick={() => void handleRemovePhoto()} loading={savingPhoto}>
                         Remove photo
                       </Button>
                     )}
-                    <span className="text-xs text-text-500">Stored on this device · max 2 MB</span>
+                    <Button variant="ghost" size="sm" onClick={openNameForm}>
+                      {needsName ? 'Choose name' : 'Edit name'}
+                    </Button>
+                    <span className="text-xs text-text-500">Saved to your account · max 8 MB</span>
                   </div>
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <p className="text-sm font-medium text-text-200">Choose your avatar</p>
@@ -631,6 +700,17 @@ const DashboardPage: React.FC = () => {
           </Card>
         </div>
       </div>
+
+      <ImageCropModal
+        open={cropOpen}
+        file={cropFile}
+        busy={savingPhoto}
+        onCancel={() => {
+          setCropOpen(false);
+          setCropFile(null);
+        }}
+        onConfirm={handleCropConfirm}
+      />
     </div>
   );
 };

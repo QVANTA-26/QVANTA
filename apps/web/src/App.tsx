@@ -7,6 +7,7 @@ const LandingPage = lazy(() => import('@/pages/Landing'));
 const HomepagePage = lazy(() => import('@/pages/Homepage'));
 const LoginPage = lazy(() => import('@/pages/Login'));
 const RegisterPage = lazy(() => import('@/pages/Register'));
+const VerifyEmailPage = lazy(() => import('@/pages/VerifyEmail'));
 const TermsPage = lazy(() => import('@/pages/Terms'));
 const PrivacyPage = lazy(() => import('@/pages/Privacy'));
 const NotFoundPage = lazy(() => import('@/pages/NotFound'));
@@ -53,6 +54,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/home" element={<HomepagePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/auth/google/callback" element={<AuthGoogleCallbackPage />} />

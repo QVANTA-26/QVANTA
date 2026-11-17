@@ -44,6 +44,12 @@ enum CheckpointKind {
 model User {
   id               String              @id @default(uuid())
   email            String              @unique
+  /// Chosen by the learner on their first sign-in; falls back to the email
+  /// local part in the UI until it is set.
+  displayName      String?
+  /// Learners can only sign in once they prove they own the mailbox. Rows that
+  /// predate this column were backfilled to true by the migration.
+  emailVerified    Boolean             @default(false)
   googleId         String?             @unique
   passwordHash     String?
   role             UserRole            @default(student)
@@ -61,8 +67,23 @@ model User {
   circuits        Circuit[]           @relation("UserCircuits")
   organizations   OrganizationMember[]
   webauthnCredentials WebAuthnCredential[]
+  profileImage    ProfileImage?
 
   @@map("users")
+}
+
+/// The learner's uploaded (and already cropped client-side) profile photo.
+/// Kept in its own table so every user query stays light; served as a plain
+/// image response so <img> tags can render it without an auth header.
+model ProfileImage {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mimeType  String
+  data      Bytes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("profile_images")
 }
 
 /// Passkey (WebAuthn) credentials used for face / fingerprint sign-in. The

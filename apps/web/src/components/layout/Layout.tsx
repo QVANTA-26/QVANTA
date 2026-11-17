@@ -4,6 +4,7 @@ import { Button } from '@qvanta/ui';
 import Sidebar from './Sidebar';
 import { useAuthStore } from '@/store/auth';
 import { useUIStore } from '@/store/ui';
+import UserAvatar, { displayNameOf } from '@/components/ui/UserAvatar';
 
 const IconMenu: React.FC<{ className?: string }> = ({ className }) => (
   <svg
@@ -172,11 +173,14 @@ const TopBar: React.FC = () => {
         </Button>
 
         <div className="hidden items-center gap-2 rounded-full bg-bg-900 px-3 py-1.5 sm:flex">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500 text-[11px] font-semibold text-white shadow-[0_0_16px_rgba(109,0,26,0.35)]">
-            {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
-          </div>
+          <UserAvatar
+            user={user}
+            size={24}
+            className="shadow-[0_0_16px_rgba(109,0,26,0.35)]"
+            textClassName="text-[11px] font-semibold text-white"
+          />
           <span className="max-w-[140px] truncate text-xs font-medium text-text-200">
-            {user?.email ?? 'User'}
+            {displayNameOf(user)}
           </span>
         </div>
 

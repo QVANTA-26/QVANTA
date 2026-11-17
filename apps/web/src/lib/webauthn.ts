@@ -14,6 +14,18 @@ export interface PasskeySession {
   tokens: { accessToken: string };
 }
 
+/**
+ * A passkey-first sign-up proves this device, not the mailbox, so the account
+ * stays inert until the emailed link is confirmed.
+ */
+export interface PendingPasskeyVerification {
+  user: User;
+  verificationRequired: true;
+  emailSent: boolean;
+}
+
+export type PasskeyRegistrationResult = PasskeySession | PendingPasskeyVerification;
+
 interface CeremonyChallenge<T> {
   options: T;
   challengeToken: string;
@@ -34,17 +46,22 @@ export const biometricSignInSupported = (): boolean => {
 };
 
 /** Creates a passkey-first account using Face ID / fingerprint. */
-export async function createAccountWithBiometrics(email: string): Promise<PasskeySession> {
+export async function createAccountWithBiometrics(
+  email: string
+): Promise<PasskeyRegistrationResult> {
   const { data } = await apiClient.post<
     CeremonyChallenge<PublicKeyCredentialCreationOptionsJSON>
   >('/auth/webauthn/register/options', { email });
 
   const response = await startRegistration({ optionsJSON: data.options });
 
-  const verified = await apiClient.post<PasskeySession>('/auth/webauthn/register/verify', {
-    challengeToken: data.challengeToken,
-    response,
-  });
+  const verified = await apiClient.post<PasskeyRegistrationResult>(
+    '/auth/webauthn/register/verify',
+    {
+      challengeToken: data.challengeToken,
+      response,
+    }
+  );
 
   return verified.data;
 }

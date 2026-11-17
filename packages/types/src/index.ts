@@ -5,6 +5,10 @@ export type UserTier = 'free' | 'pro' | 'institution';
 export interface User {
   id: string;
   email: string;
+  /** Chosen by the learner after sign-up; the UI falls back to the email local part. */
+  displayName?: string;
+  /** False until the learner confirms ownership of the mailbox; sign-in stays blocked until then. */
+  emailVerified: boolean;
   googleId?: string;
   passwordHash?: string;
   role: UserRole;
@@ -12,6 +16,8 @@ export interface User {
   usageMonth: string;
   usageSims: number;
   avatarPreset: number;
+  /** API-relative path of the uploaded profile photo, when one exists. */
+  avatarUrl?: string;
   createdAt: string;
   stripeCustomerId?: string;
 }

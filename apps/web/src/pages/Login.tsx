@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Button } from '@qvanta/ui';
 import AuthForm from '@/components/auth/AuthForm';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { isLocalDevHost } from '@/lib/runtime';
 import { getSafeAuthRedirect } from '@/lib/auth-navigation';
 import { describeBiometricError, signInWithBiometrics } from '@/lib/webauthn';
+import { resendVerificationEmail } from '@/lib/email-verification';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,10 +18,34 @@ const LoginPage: React.FC = () => {
   const [error, setError] = React.useState<string | null>(
     searchParams.get('oauth') === 'error' ? 'Google sign-in failed. Please try again.' : null
   );
+  // Set when the credentials are right but the mailbox is still unconfirmed.
+  const [pendingEmail, setPendingEmail] = React.useState<string | null>(null);
+  const [resending, setResending] = React.useState(false);
+  const [resendMessage, setResendMessage] = React.useState<string | null>(null);
+
+  const handleResend = async () => {
+    if (!pendingEmail) return;
+    setResending(true);
+    setResendMessage(null);
+    try {
+      const result = await resendVerificationEmail(pendingEmail);
+      setResendMessage(
+        result.emailSent
+          ? 'A fresh confirmation link is on its way.'
+          : 'We could not send the email right now. Please try again in a moment.'
+      );
+    } catch {
+      setResendMessage('We could not send the email right now. Please try again in a moment.');
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleSubmit = async (values: { email: string; password: string }) => {
     setLoading(true);
     setError(null);
+    setPendingEmail(null);
+    setResendMessage(null);
 
     try {
       const response = await apiClient.post<{
@@ -42,6 +68,8 @@ const LoginPage: React.FC = () => {
         const mockUser = {
           id: 'dev-local',
           email: 'dev@qvanta.ai',
+          displayName: 'Dev Learner',
+          emailVerified: true,
           role: 'admin',
           tier: 'free',
           usageMonth: new Date().toISOString().slice(0, 7),
@@ -58,6 +86,11 @@ const LoginPage: React.FC = () => {
         return;
       }
 
+      const code = err?.response?.data?.error?.code;
+      if (code === 'EMAIL_NOT_VERIFIED') {
+        setPendingEmail(values.email.trim().toLowerCase());
+      }
+
       setError(
         err?.response?.data?.error?.message ??
           (err?.response ? 'Login failed. Check your email and password.' : 'Unable to reach QVANTA. Check your connection and try again.')
@@ -70,6 +103,8 @@ const LoginPage: React.FC = () => {
   const handleBiometricLogin = async () => {
     setLoading(true);
     setError(null);
+    setPendingEmail(null);
+    setResendMessage(null);
 
     try {
       const session = await signInWithBiometrics();
@@ -85,6 +120,19 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const errorAction = pendingEmail ? (
+    <>
+      {resendMessage && (
+        <p className="text-sm text-text-300" role="status">
+          {resendMessage}
+        </p>
+      )}
+      <Button variant="secondary" className="w-full" onClick={() => void handleResend()} loading={resending}>
+        Resend confirmation link
+      </Button>
+    </>
+  ) : null;
+
   return (
     <AuthForm
       mode="login"
@@ -99,6 +147,7 @@ const LoginPage: React.FC = () => {
       onBiometricLogin={handleBiometricLogin}
       loading={loading}
       error={error}
+      errorAction={errorAction}
     />
   );
 };
