@@ -19,11 +19,13 @@ export interface SimulationResultsProps {
     backend: string;
     blochVectors?: Array<{ x: number; y: number; z: number }>;
   } | null;
+  /** Shown before the first run; tweak it for surfaces outside the builder. */
+  emptyHint?: React.ReactNode;
 }
 
 const COLORS = ['#8f102d', '#b76e79', '#d19b83', '#8aa58e', '#d8ad96', '#b94b5a', '#e4d5cc', '#9a7a6d'];
 
-const SimulationResults: React.FC<SimulationResultsProps> = ({ status, error, result }) => {
+const SimulationResults: React.FC<SimulationResultsProps> = ({ status, error, result, emptyHint }) => {
   if (status === 'idle' && !result) {
     return (
       <div className="flex min-h-[420px] items-center justify-center p-8 text-center">
@@ -37,7 +39,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ status, error, re
             </svg>
           </div>
           <p className="font-medium text-text-300">No simulation run yet</p>
-          <p>Build a circuit, then click <span className="rounded bg-bg-800 px-1 text-text-200">Simulate</span> in the Code Editor tab to see measurement outcome histograms here.</p>
+          {emptyHint ?? <p>Build a circuit, then click <span className="rounded bg-bg-800 px-1 text-text-200">Simulate</span> in the Code Editor tab to see measurement outcome histograms here.</p>}
         </div>
       </div>
     );

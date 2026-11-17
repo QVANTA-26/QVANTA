@@ -18,6 +18,7 @@ const AlgorithmsPage = lazy(() => import('@/pages/Algorithms'));
 const CurriculumPage = lazy(() => import('@/pages/Curriculum'));
 const CircuitBuilderPage = lazy(() => import('@/pages/CircuitBuilderPage'));
 const TutorPage = lazy(() => import('@/pages/Tutor'));
+const PaperLabPage = lazy(() => import('@/pages/PaperLab'));
 const BillingPage = lazy(() => import('@/pages/Billing'));
 const AdminPage = lazy(() => import('@/pages/AdminPage'));
 
@@ -71,6 +72,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/curriculum" element={<CurriculumPage />} />
           <Route path="/circuit/:id?" element={<CircuitBuilderPage />} />
           <Route path="/tutor" element={<TutorPage />} />
+          <Route path="/papers" element={<PaperLabPage />} />
           <Route path="/billing" element={<BillingPage />} />
           <Route path="/admin" element={<AdminPage />} />
         </Route>

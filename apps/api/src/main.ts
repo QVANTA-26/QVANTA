@@ -17,6 +17,7 @@ import { tutorRouter } from './modules/tutor/tutor.router';
 import { healthRouter } from './modules/health/health.router';
 import { simulationsRouter } from './modules/simulations/simulations.router';
 import { lessonsRouter } from './modules/lessons/lessons.router';
+import { papersRouter } from './modules/papers/papers.router';
 
 import { seedAdminUser } from './seeders/admin';
 import { seedCurriculumModules } from './seeders/curriculum';
@@ -84,6 +85,7 @@ function createApp(): Express {
   app.use('/tutor', tutorRouter);
   app.use('/simulations', simulationsRouter);
   app.use('/lessons', lessonsRouter);
+  app.use('/papers', papersRouter);
   app.use('/health', healthRouter);
 
   app.use((_req: Request, _res: Response, next: NextFunction) => {

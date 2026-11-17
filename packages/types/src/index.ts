@@ -68,6 +68,62 @@ export const GATE_IDS = [
 
 export type Gate = (typeof GATE_IDS)[number];
 
+/**
+ * How many extra qubits a gate needs beyond its own: 1 for controlled/SWAP
+ * style gates, 2 for Toffoli/Fredkin/CCZ, 0 for everything else. Shared so the
+ * API can validate model-produced circuits against the same arity the builder
+ * and simulator use.
+ */
+export const GATE_TARGET_COUNTS: Record<Gate, 0 | 1 | 2> = {
+  I: 0,
+  H: 0,
+  X: 0,
+  Y: 0,
+  Z: 0,
+  S: 0,
+  Sdg: 0,
+  T: 0,
+  Tdg: 0,
+  SX: 0,
+  SXdg: 0,
+  RX: 0,
+  RY: 0,
+  RZ: 0,
+  P: 0,
+  CNOT: 1,
+  CY: 1,
+  CZ: 1,
+  CH: 1,
+  SWAP: 1,
+  iSWAP: 1,
+  CRX: 1,
+  CRY: 1,
+  CRZ: 1,
+  CP: 1,
+  CCX: 2,
+  CSWAP: 2,
+  CCZ: 2,
+  Measure: 0,
+  Barrier: 0,
+  Reset: 0,
+};
+
+/** Gates whose operation carries a rotation angle, stored in radians. */
+export const PARAMETERIZED_GATES: readonly Gate[] = [
+  'RX',
+  'RY',
+  'RZ',
+  'P',
+  'CRX',
+  'CRY',
+  'CRZ',
+  'CP',
+];
+
+export const getGateTargetCount = (gate: Gate): number => GATE_TARGET_COUNTS[gate];
+
+export const isParameterizedGate = (gate: Gate): boolean => PARAMETERIZED_GATES.includes(gate);
+
 export interface GateOp {
   gate: Gate;
   qubit: number;
@@ -87,6 +143,26 @@ export interface Circuit {
   timesteps: number;
   operations: GateOp[];
   createdAt?: string;
+}
+
+/** One quantum circuit lifted out of a research paper by the Paper Lab. */
+export interface PaperCircuit {
+  /** Short name, e.g. "Grover iteration" or "QFT on 3 qubits". */
+  name: string;
+  /** One or two sentences explaining what the circuit does in the paper. */
+  description: string;
+  circuit: Circuit;
+}
+
+export interface PaperAnalysis {
+  title: string;
+  /** The paper link the learner supplied, when they used one. */
+  sourceUrl?: string;
+  /** Plain-language summary of the paper. */
+  summary: string;
+  circuits: PaperCircuit[];
+  /** Non-fatal notes: dropped gates, clamped qubit counts, missing circuits. */
+  warnings: string[];
 }
 
 export type SimulationJobStatus = 'queued' | 'running' | 'completed' | 'failed';
