@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import axios from 'axios';
 import {
   GATE_IDS,
   getGateTargetCount,
@@ -28,6 +29,10 @@ if (process.env.ANTHROPIC_API_KEY) {
     claudeClient = null;
   }
 }
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() || undefined;
+const GEMINI_PAPER_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-1.5-flash';
+const geminiAvailable = Boolean(GEMINI_API_KEY);
 
 const GATE_LIST = GATE_IDS.join(', ');
 
@@ -231,15 +236,67 @@ function normalizeAnalysis(raw: unknown, sourceUrl: string | undefined): PaperAn
 }
 
 /**
- * Sends the paper to Claude and returns a validated, builder-ready analysis.
- * Text sources go in as a prompt; PDFs go in as a document block so the model
- * reads the original layout without us parsing PDFs on the server.
+ * Extracts circuits from the paper with Google Gemini via the public
+ * Generative Language REST API. PDFs are sent as inline data so the model
+ * reads the original layout; text sources are appended to the instructions.
+ */
+async function extractWithGemini(source: PaperSource): Promise<PaperAnalysis> {
+  const parts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> =
+    source.kind === 'pdf'
+      ? [
+          { inline_data: { mime_type: 'application/pdf', data: source.dataBase64 } },
+          { text: INSTRUCTIONS },
+        ]
+      : [{ text: `${INSTRUCTIONS}\n\nPAPER TEXT:\n${source.text}` }];
+
+  let text: string;
+  try {
+    const res = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_PAPER_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        contents: [{ role: 'user', parts }],
+        generationConfig: { maxOutputTokens: 4096, temperature: 0.2 },
+      },
+      { timeout: 120_000, headers: { 'Content-Type': 'application/json' } }
+    );
+    text = res.data?.candidates?.[0]?.content?.parts
+      ?.map((p: { text?: string }) => p.text ?? '')
+      .join('\n')
+      .trim();
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new AppError(
+      'INTERNAL_ERROR',
+      `The paper could not be analysed by Gemini (${detail}). Check that GEMINI_MODEL supports your plan or try another link.`,
+      502
+    );
+  }
+
+  if (!text) {
+    throw new AppError(
+      'INTERNAL_ERROR',
+      'The paper analysis returned an empty response. Try another link, or upload the PDF.',
+      502
+    );
+  }
+
+  return normalizeAnalysis(extractJsonObject(text), source.sourceUrl);
+}
+
+/**
+ * Extracts circuits from the paper. Prefers Google Gemini when a key is
+ * configured (strongest native PDF understanding), falls back to Anthropic
+ * Claude, and returns a clear 503 if neither provider is available.
  */
 export async function extractPaperAnalysis(source: PaperSource): Promise<PaperAnalysis> {
+  if (geminiAvailable) {
+    return extractWithGemini(source);
+  }
+
   if (!claudeClient) {
     throw new AppError(
       'INTERNAL_ERROR',
-      'Paper analysis is not configured on this server (ANTHROPIC_API_KEY is missing).',
+      'Paper analysis is not configured on this server (GEMINI_API_KEY or ANTHROPIC_API_KEY is missing).',
       503
     );
   }
@@ -280,4 +337,4 @@ export async function extractPaperAnalysis(source: PaperSource): Promise<PaperAn
   return normalizeAnalysis(extractJsonObject(text), source.sourceUrl);
 }
 
-export const isPaperAnalysisConfigured = (): boolean => claudeClient !== null;
+export const isPaperAnalysisConfigured = (): boolean => geminiAvailable || claudeClient !== null;
