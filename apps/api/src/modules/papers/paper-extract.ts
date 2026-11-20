@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
 import axios from 'axios';
 import {
   GATE_IDS,
@@ -19,20 +18,9 @@ const MAX_TIMESTEPS = 32;
 const MAX_CIRCUITS = 6;
 const MAX_OPERATIONS = 200;
 
-const PAPER_MODEL = process.env.PAPER_MODEL ?? 'claude-3-5-sonnet-latest';
-
-let claudeClient: Anthropic | null = null;
-if (process.env.ANTHROPIC_API_KEY) {
-  try {
-    claudeClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  } catch {
-    claudeClient = null;
-  }
-}
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() || undefined;
-const GEMINI_PAPER_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-1.5-flash';
-const geminiAvailable = Boolean(GEMINI_API_KEY);
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.1-flash-lite';
+const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`;
 
 const GATE_LIST = GATE_IDS.join(', ');
 
@@ -49,8 +37,9 @@ const INSTRUCTIONS = [
   '- If the paper contains no concrete circuit, return an empty "circuits" array.',
   '',
   'Respond with JSON only, matching exactly this shape:',
-  '{"title": string, "summary": string, "circuits": [{"name": string, "description": string, "qubits": int, "operations": [{"gate": string, "qubit": int, "timestep": int, "target"?: int, "target2"?: int, "parameter"?: number}]}]}',
+  '{"title": string, "summary": string, "keyTakeaways": string[], "circuits": [{"name": string, "description": string, "qubits": int, "operations": [{"gate": string, "qubit": int, "timestep": int, "target"?: int, "target2"?: int, "parameter"?: number}]}]}',
   '- "summary" is 2-4 plain-language sentences aimed at a student.',
+  '- "keyTakeaways" is an array of 3 short plain-language points about the paper\'s central idea, result, or significance.',
   '- "name" is a short label (max 6 words); "description" is one or two sentences.',
 ].join('\n');
 
@@ -64,6 +53,7 @@ interface RawCircuit {
 interface RawAnalysis {
   title?: unknown;
   summary?: unknown;
+  keyTakeaways?: unknown;
   circuits?: unknown;
 }
 
@@ -226,115 +216,105 @@ function normalizeAnalysis(raw: unknown, sourceUrl: string | undefined): PaperAn
     warnings.push('No concrete quantum circuit could be identified in this paper.');
   }
 
+  const keyTakeaways = Array.isArray(analysis.keyTakeaways)
+    ? analysis.keyTakeaways
+        .map((takeaway) => asString(takeaway, 240))
+        .filter((takeaway) => takeaway.length > 0)
+        .slice(0, 3)
+    : [];
+
   return {
     title: asString(analysis.title, 200) || 'Untitled paper',
     ...(sourceUrl ? { sourceUrl } : {}),
     summary: asString(analysis.summary, 2000),
+    keyTakeaways,
     circuits,
     warnings,
   };
 }
 
 /**
- * Extracts circuits from the paper with Google Gemini via the public
- * Generative Language REST API. PDFs are sent as inline data so the model
- * reads the original layout; text sources are appended to the instructions.
+ * Sends the paper to Google Gemini and returns a validated, builder-ready analysis.
+ * Text sources go in as a prompt; PDFs go in as inline document data.
  */
-async function extractWithGemini(source: PaperSource): Promise<PaperAnalysis> {
-  const parts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> =
+export async function extractPaperAnalysis(source: PaperSource): Promise<PaperAnalysis> {
+  if (!GOOGLE_API_KEY) {
+    if (source.kind === 'text') {
+      const title = source.text.replace(/\s+/g, ' ').trim().slice(0, 160);
+      return {
+        title: title || 'Untitled paper',
+        ...(source.sourceUrl ? { sourceUrl: source.sourceUrl } : {}),
+        summary: source.text.replace(/\s+/g, ' ').trim().slice(0, 2000),
+        keyTakeaways: [],
+        circuits: [],
+        warnings: [
+          'AI circuit extraction is unavailable because GOOGLE_API_KEY is not configured.',
+          'No concrete quantum circuit could be identified without AI extraction.',
+        ],
+      };
+    }
+
+    return {
+      title: 'Uploaded paper',
+      ...(source.sourceUrl ? { sourceUrl: source.sourceUrl } : {}),
+      summary: 'This PDF is available, but server-side PDF text extraction and AI analysis are not configured.',
+      keyTakeaways: [],
+      circuits: [],
+      warnings: [
+        'AI circuit extraction is unavailable because GOOGLE_API_KEY is not configured.',
+        'Upload a readable paper link as text, or configure GOOGLE_API_KEY for PDF analysis.',
+      ],
+    };
+  }
+
+  const parts =
     source.kind === 'pdf'
       ? [
-          { inline_data: { mime_type: 'application/pdf', data: source.dataBase64 } },
+          {
+            inline_data: {
+              mime_type: 'application/pdf',
+              data: source.dataBase64,
+            },
+          },
           { text: INSTRUCTIONS },
         ]
       : [{ text: `${INSTRUCTIONS}\n\nPAPER TEXT:\n${source.text}` }];
 
-  let text: string;
+  let responseText = '';
   try {
-    const res = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_PAPER_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+    const response = await axios.post(
+      `${GEMINI_ENDPOINT}?key=${encodeURIComponent(GOOGLE_API_KEY)}`,
       {
         contents: [{ role: 'user', parts }],
-        generationConfig: { maxOutputTokens: 4096, temperature: 0.2 },
+        generationConfig: {
+          temperature: 0,
+          maxOutputTokens: 4096,
+          responseMimeType: 'application/json',
+        },
       },
-      { timeout: 120_000, headers: { 'Content-Type': 'application/json' } }
+      { timeout: 60_000 }
     );
-    text = res.data?.candidates?.[0]?.content?.parts
-      ?.map((p: { text?: string }) => p.text ?? '')
-      .join('\n')
-      .trim();
+
+    const partsResult = response.data?.candidates?.[0]?.content?.parts;
+    responseText = Array.isArray(partsResult)
+      ? partsResult
+          .filter((part: unknown): part is { text: string } =>
+            Boolean(part && typeof part === 'object' && typeof (part as { text?: unknown }).text === 'string')
+          )
+          .map((part: { text: string }) => part.text)
+          .join('\n')
+          .trim()
+      : '';
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     throw new AppError(
       'INTERNAL_ERROR',
-      `The paper could not be analysed by Gemini (${detail}). Check that GEMINI_MODEL supports your plan or try another link.`,
+      `The paper could not be analysed (${detail}). Check that GEMINI_MODEL is available on this Google API key.`,
       502
     );
   }
 
-  if (!text) {
-    throw new AppError(
-      'INTERNAL_ERROR',
-      'The paper analysis returned an empty response. Try another link, or upload the PDF.',
-      502
-    );
-  }
-
-  return normalizeAnalysis(extractJsonObject(text), source.sourceUrl);
+  return normalizeAnalysis(extractJsonObject(responseText), source.sourceUrl);
 }
 
-/**
- * Extracts circuits from the paper. Prefers Google Gemini when a key is
- * configured (strongest native PDF understanding), falls back to Anthropic
- * Claude, and returns a clear 503 if neither provider is available.
- */
-export async function extractPaperAnalysis(source: PaperSource): Promise<PaperAnalysis> {
-  if (geminiAvailable) {
-    return extractWithGemini(source);
-  }
-
-  if (!claudeClient) {
-    throw new AppError(
-      'INTERNAL_ERROR',
-      'Paper analysis is not configured on this server (GEMINI_API_KEY or ANTHROPIC_API_KEY is missing).',
-      503
-    );
-  }
-
-  const content: Anthropic.MessageParam['content'] =
-    source.kind === 'pdf'
-      ? [
-          {
-            type: 'document',
-            source: { type: 'base64', media_type: 'application/pdf', data: source.dataBase64 },
-          } as Anthropic.DocumentBlockParam,
-          { type: 'text', text: INSTRUCTIONS },
-        ]
-      : [{ type: 'text', text: `${INSTRUCTIONS}\n\nPAPER TEXT:\n${source.text}` }];
-
-  let response: Anthropic.Message;
-  try {
-    response = await claudeClient.messages.create({
-      model: PAPER_MODEL,
-      max_tokens: 4096,
-      messages: [{ role: 'user', content }],
-    });
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    throw new AppError(
-      'INTERNAL_ERROR',
-      `The paper could not be analysed (${detail}). Check that PAPER_MODEL is available on this API key.`,
-      502
-    );
-  }
-
-  const text = response.content
-    .filter((block): block is Anthropic.TextBlock => block.type === 'text')
-    .map((block) => block.text)
-    .join('\n')
-    .trim();
-
-  return normalizeAnalysis(extractJsonObject(text), source.sourceUrl);
-}
-
-export const isPaperAnalysisConfigured = (): boolean => geminiAvailable || claudeClient !== null;
+export const isPaperAnalysisConfigured = (): boolean => Boolean(GOOGLE_API_KEY);

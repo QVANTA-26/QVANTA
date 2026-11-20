@@ -160,6 +160,8 @@ export interface PaperAnalysis {
   sourceUrl?: string;
   /** Plain-language summary of the paper. */
   summary: string;
+  /** Student-friendly points explaining the paper's main ideas. */
+  keyTakeaways?: string[];
   circuits: PaperCircuit[];
   /** Non-fatal notes: dropped gates, clamped qubit counts, missing circuits. */
   warnings: string[];

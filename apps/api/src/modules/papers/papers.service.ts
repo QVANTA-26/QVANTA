@@ -9,8 +9,8 @@ export interface AnalyzePaperInput {
 }
 
 /**
- * Resolves the learner's link or upload into paper text/PDF, then asks Claude to
- * lift out the circuits. A link is preferred when both are provided.
+ * Resolves the learner's link or upload into paper text/PDF, then asks Google
+ * Gemini to lift out the circuits. A link is preferred when both are provided.
  */
 export async function analyzePaper(input: AnalyzePaperInput): Promise<PaperAnalysis> {
   if (input.url) {
