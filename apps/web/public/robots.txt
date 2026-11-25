@@ -1,0 +1,22 @@
+# QVANTA — https://www.qvantaindustry.space
+# Public marketing + legal pages are crawlable; the authenticated app is not.
+
+User-agent: *
+Allow: /
+
+# Authenticated / app-only routes (behind login)
+Disallow: /dashboard
+Disallow: /learn
+Disallow: /algorithms
+Disallow: /curriculum
+Disallow: /circuit
+Disallow: /tutor
+Disallow: /papers
+Disallow: /billing
+Disallow: /admin
+
+# Auth flow endpoints (no crawl value)
+Disallow: /verify-email
+Disallow: /auth/
+
+Sitemap: https://www.qvantaindustry.space/sitemap.xml
