@@ -1,4 +1,4 @@
-# QVANTA architecture
+  # QVANTA architecture
 
 ## Scope
 

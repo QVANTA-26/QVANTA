@@ -9,10 +9,7 @@
     "types": ["node"],
     "composite": false,
     "declaration": false,
-    "declarationMap": false,
-    "paths": {
-      "@qvanta/types": ["../../packages/types/src"]
-    }
+    "declarationMap": false
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

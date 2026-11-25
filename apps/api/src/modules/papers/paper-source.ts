@@ -4,8 +4,7 @@ import { AppError } from '../../lib/errors';
 /**
  * What the Paper Lab managed to pull out of a learner-supplied source. Either
  * readable text (an arXiv abstract page, an HTML paper, a blog post) or the raw
- * PDF bytes, which we hand to Claude as a document block so we do not need a
- * server-side PDF parser.
+ * PDF bytes, which we send to Google Gemini as inline document data.
  */
 export type PaperSource =
   | { kind: 'text'; text: string; sourceUrl?: string }

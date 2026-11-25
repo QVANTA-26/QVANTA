@@ -10,7 +10,7 @@ import {
   type PaperCircuit,
 } from '@qvanta/types';
 import { AppError } from '../../lib/errors';
-import { generateGeminiText } from '../../lib/gemini';
+import { generateGeminiText, type GeminiPart } from '../../lib/gemini';
 import type { PaperSource } from './paper-source';
 
 /** Builder and simulator both cap here, so extracted circuits must fit too. */
@@ -48,8 +48,9 @@ const INSTRUCTIONS = [
   '- If the paper contains no concrete circuit, return an empty "circuits" array.',
   '',
   'Respond with JSON only, matching exactly this shape:',
-  '{"title": string, "summary": string, "circuits": [{"name": string, "description": string, "qubits": int, "operations": [{"gate": string, "qubit": int, "timestep": int, "target"?: int, "target2"?: int, "parameter"?: number}]}]}',
+  '{"title": string, "summary": string, "keyTakeaways": string[], "circuits": [{"name": string, "description": string, "qubits": int, "operations": [{"gate": string, "qubit": int, "timestep": int, "target"?: int, "target2"?: int, "parameter"?: number}]}]}',
   '- "summary" is 2-4 plain-language sentences aimed at a student.',
+  '- "keyTakeaways" is an array of 3 short plain-language points about the paper\'s central idea, result, or significance.',
   '- "name" is a short label (max 6 words); "description" is one or two sentences.',
 ].join('\n');
 
@@ -63,6 +64,7 @@ interface RawCircuit {
 interface RawAnalysis {
   title?: unknown;
   summary?: unknown;
+  keyTakeaways?: unknown;
   circuits?: unknown;
 }
 
@@ -225,22 +227,30 @@ function normalizeAnalysis(raw: unknown, sourceUrl: string | undefined): PaperAn
     warnings.push('No concrete quantum circuit could be identified in this paper.');
   }
 
+  const keyTakeaways = Array.isArray(analysis.keyTakeaways)
+    ? analysis.keyTakeaways
+        .map((takeaway) => asString(takeaway, 240))
+        .filter((takeaway) => takeaway.length > 0)
+        .slice(0, 3)
+    : [];
+
   return {
     title: asString(analysis.title, 200) || 'Untitled paper',
     ...(sourceUrl ? { sourceUrl } : {}),
     summary: asString(analysis.summary, 2000),
+    keyTakeaways,
     circuits,
     warnings,
   };
 }
 
 /**
- * Extracts circuits from the paper with Google Gemini via the public
- * Generative Language REST API. PDFs are sent as inline data so the model
- * reads the original layout; text sources are appended to the instructions.
+ * Extracts circuits from the paper with Google Gemini via the shared helper,
+ * which retries across candidate models. PDFs are sent as inline data so the
+ * model reads the original layout; text sources are appended to the instructions.
  */
 async function extractWithGemini(source: PaperSource): Promise<PaperAnalysis> {
-  const parts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> =
+  const parts: GeminiPart[] =
     source.kind === 'pdf'
       ? [
           { inline_data: { mime_type: 'application/pdf', data: source.dataBase64 } },
@@ -255,6 +265,7 @@ async function extractWithGemini(source: PaperSource): Promise<PaperAnalysis> {
       maxOutputTokens: 4096,
       temperature: 0.2,
       timeoutMs: 120_000,
+      responseMimeType: 'application/json',
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);

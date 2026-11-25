@@ -12,11 +12,6 @@
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
-    "baseUrl": ".",
-    "paths": {
-      "@qvanta/types": ["packages/types/src"],
-      "@qvanta/ui": ["packages/ui/src"]
-    }
+    "sourceMap": true
   }
 }

@@ -33,6 +33,8 @@ export async function generateGeminiText(options: {
   maxOutputTokens: number;
   temperature: number;
   timeoutMs: number;
+  /** When set, ask Gemini for that MIME type (e.g. application/json). */
+  responseMimeType?: string;
 }): Promise<string> {
   const key = process.env.GEMINI_API_KEY?.trim();
   if (!key) {
@@ -49,7 +51,11 @@ export async function generateGeminiText(options: {
           ...(options.systemInstruction
             ? { systemInstruction: { role: 'system', parts: [{ text: options.systemInstruction }] } }
             : {}),
-          generationConfig: { maxOutputTokens: options.maxOutputTokens, temperature: options.temperature },
+          generationConfig: {
+            maxOutputTokens: options.maxOutputTokens,
+            temperature: options.temperature,
+            ...(options.responseMimeType ? { responseMimeType: options.responseMimeType } : {}),
+          },
         },
         { timeout: options.timeoutMs, headers: { 'Content-Type': 'application/json' } }
       );

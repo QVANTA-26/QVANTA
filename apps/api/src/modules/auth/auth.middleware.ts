@@ -4,6 +4,26 @@ import { AppError } from '../../lib/errors';
 import type { JwtPayload } from '../../lib/jwt';
 import type { UserRole } from '@qvanta/types';
 
+/** Matches the local dev fallback token set by the web app (Login.tsx). */
+const DEV_TOKEN = 'dev-token';
+
+/**
+ * The web app's local dev fallback stores a literal `dev-token` instead of a
+ * signed JWT. Accept it outside production so Paper Lab, simulations, etc.
+ * work against a locally running API without a database-backed login.
+ */
+function resolveDevPayload(token: string): JwtPayload | null {
+  if (process.env.NODE_ENV === 'production' || token !== DEV_TOKEN) {
+    return null;
+  }
+  return {
+    id: 'dev-local',
+    email: 'dev@qvanta.ai',
+    role: 'admin',
+    tier: 'free',
+  };
+}
+
 export interface AuthRequest extends Request {
   user?: JwtPayload;
 }
@@ -28,7 +48,7 @@ export function JwtAuthGuard(
   }
 
   try {
-    const payload = verifyAccessToken(token);
+    const payload = resolveDevPayload(token) ?? verifyAccessToken(token);
     (req as AuthRequest).user = payload;
     next();
   } catch (err) {

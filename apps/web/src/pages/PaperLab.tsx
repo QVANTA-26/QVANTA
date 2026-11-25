@@ -6,11 +6,13 @@ import { apiClient } from '@/lib/api-client';
 import { runCircuitSimulation } from '@/lib/simulate';
 import { useCircuitStore } from '@/store/circuit';
 import CircuitDiagram from '@/components/circuit/CircuitDiagram';
+import PaperCircuitScene3D from '@/components/circuit/PaperCircuitScene3D';
 import SimulationResults from '@/components/circuit/SimulationResults';
 
 type InputMode = 'link' | 'pdf';
 
 type SimStatus = 'idle' | 'loading' | 'done' | 'error';
+type CircuitViewMode = '3d' | '2d';
 
 /** Mirrors the server-side cap so oversized files never leave the browser. */
 const MAX_PDF_BYTES = 6 * 1024 * 1024;
@@ -34,6 +36,7 @@ const PaperLab: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [analysis, setAnalysis] = React.useState<PaperAnalysis | null>(null);
   const [activeIndex, setActiveIndex] = React.useState(0);
+  const [circuitViewMode, setCircuitViewMode] = React.useState<CircuitViewMode>('3d');
 
   const [simStatus, setSimStatus] = React.useState<SimStatus>('idle');
   const [simError, setSimError] = React.useState<string | null>(null);
@@ -67,6 +70,7 @@ const PaperLab: React.FC = () => {
     setError(null);
     setAnalysis(null);
     setActiveIndex(0);
+    setCircuitViewMode('3d');
     resetSimulation();
 
     try {
@@ -75,7 +79,9 @@ const PaperLab: React.FC = () => {
           ? { url: url.trim() }
           : { pdfBase64: await readFileAsBase64(file as File) };
 
-      const res = await apiClient.post<PaperAnalysis>('/papers/analyze', body);
+      const res = await apiClient.post<PaperAnalysis>('/papers/analyze', body, {
+        timeout: 180_000,
+      });
       setAnalysis(res.data);
     } catch (err: any) {
       const message =
@@ -90,6 +96,7 @@ const PaperLab: React.FC = () => {
 
   const handleSelectCircuit = (index: number) => {
     setActiveIndex(index);
+    setCircuitViewMode('3d');
     resetSimulation();
   };
 
@@ -219,7 +226,27 @@ const PaperLab: React.FC = () => {
             </CardHeader>
             <CardContent className="flex flex-col gap-3 pt-4">
               {analysis.summary && (
-                <p className="text-sm leading-6 text-text-300">{analysis.summary}</p>
+                <div>
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-300">
+                    Paper overview
+                  </p>
+                  <p className="text-sm leading-6 text-text-300">{analysis.summary}</p>
+                </div>
+              )}
+              {(analysis.keyTakeaways?.length ?? 0) > 0 && (
+                <div className="rounded-lg border border-cyan-500/15 bg-cyan-500/[0.04] px-4 py-3">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-300">
+                    Key takeaways
+                  </p>
+                  <ul className="flex flex-col gap-2">
+                    {(analysis.keyTakeaways ?? []).map((takeaway, index) => (
+                      <li key={index} className="flex gap-2 text-sm leading-5 text-text-300">
+                        <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400" />
+                        <span>{takeaway}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
               {analysis.sourceUrl && (
                 <a
@@ -288,12 +315,38 @@ const PaperLab: React.FC = () => {
                   </CardHeader>
 
                   <CardContent className="p-0">
-                    <div className="overflow-x-auto px-4 py-5 sm:px-7">
-                      <CircuitDiagram
-                        circuit={activeCircuit.circuit}
-                        ariaLabel={`Circuit ${activeCircuit.name} extracted from ${analysis.title}`}
-                      />
+                    <div className="flex items-center justify-between border-b border-bg-800 px-4 py-2 sm:px-7">
+                      <p className="text-xs text-text-400">Circuit view</p>
+                      <div className="flex rounded-lg border border-bg-700 bg-bg-900/60 p-1">
+                        <Button
+                          variant={circuitViewMode === '3d' ? 'primary' : 'ghost'}
+                          size="sm"
+                          onClick={() => setCircuitViewMode('3d')}
+                        >
+                          3D
+                        </Button>
+                        <Button
+                          variant={circuitViewMode === '2d' ? 'primary' : 'ghost'}
+                          size="sm"
+                          onClick={() => setCircuitViewMode('2d')}
+                        >
+                          2D
+                        </Button>
+                      </div>
                     </div>
+
+                    {circuitViewMode === '3d' ? (
+                      <PaperCircuitScene3D
+                        circuit={activeCircuit.circuit}
+                      />
+                    ) : (
+                      <div className="overflow-x-auto px-4 py-5 sm:px-7">
+                        <CircuitDiagram
+                          circuit={activeCircuit.circuit}
+                          ariaLabel={`Circuit ${activeCircuit.name} extracted from ${analysis.title}`}
+                        />
+                      </div>
+                    )}
 
                     <div className="border-t border-bg-800">
                       <SimulationResults
