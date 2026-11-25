@@ -1,0 +1,73 @@
+name: Daily contribution
+
+# Keeps the contribution graph active by writing a small heartbeat file once a
+# day and committing it. Commits are attributed to the identity configured in
+# the COMMIT_AUTHOR_NAME / COMMIT_AUTHOR_EMAIL repository variables, so the
+# squares land on the right GitHub account.
+#
+# Configure under: Settings -> Secrets and variables -> Actions -> Variables
+#   COMMIT_AUTHOR_NAME  = your display name
+#   COMMIT_AUTHOR_EMAIL = your GitHub no-reply or verified email
+
+on:
+  schedule:
+    # 00:30 UTC = 06:00 IST, so every IST day gets exactly one heartbeat.
+    - cron: "30 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-commit
+  cancel-in-progress: false
+
+jobs:
+  heartbeat:
+    name: Write and push the daily heartbeat
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure commit identity
+        run: |
+          git config user.name "${{ vars.COMMIT_AUTHOR_NAME || github.actor }}"
+          git config user.email "${{ vars.COMMIT_AUTHOR_EMAIL || format('{0}+{1}@users.noreply.github.com', github.actor_id, github.actor) }}"
+
+      - name: Update heartbeat file
+        run: |
+          set -euo pipefail
+          stamp="$(TZ='Asia/Kolkata' date '+%Y-%m-%d %H:%M:%S %Z')"
+          day="$(TZ='Asia/Kolkata' date '+%Y-%m-%d')"
+          cat > docs/activity.md <<EOF
+          # Daily activity
+
+          This file is maintained automatically by the
+          [\`daily-commit\`](.github/workflows/daily-commit.yml) workflow. It records a
+          light daily heartbeat so the repository shows steady activity.
+
+          **Last heartbeat:** ${stamp}
+          EOF
+          echo "HEARTBEAT_DAY=${day}" >> "$GITHUB_ENV"
+
+      - name: Commit and push
+        run: |
+          set -euo pipefail
+          git add docs/activity.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore(activity): daily heartbeat ${HEARTBEAT_DAY}"
+          for attempt in 1 2 3; do
+            if git push; then
+              echo "Pushed on attempt ${attempt}."
+              exit 0
+            fi
+            echo "Push failed on attempt ${attempt}; rebasing and retrying."
+            git pull --rebase --autostash
+          done
+          echo "Could not push after 3 attempts." >&2
+          exit 1
