@@ -73,6 +73,11 @@ services:
       # Same dev hash as apps/api/.env.example; dollar signs must be escaped for Compose.
       ADMIN_PASSWORD_HASH: "$$2b$$12$$QEF.Sv3ccXqUF8peDrnNAeBGcG6JvVgr5GJ8ACbnP8kFSR2D9ADui"
       SEED_CURRICULUM: "1"
+      # AI providers for Tutor + Paper Lab. Set these in a .env next to this
+      # compose file (or the shell) to enable Gemini (preferred) / Claude.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     # Apply migrations before serving traffic, then start the compiled server.
     command: sh -c "npx prisma migrate deploy --schema apps/api/prisma/schema.prisma && node apps/api/dist/main.js"
     ports:

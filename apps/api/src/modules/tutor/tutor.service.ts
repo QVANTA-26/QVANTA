@@ -1,14 +1,14 @@
 import crypto from 'crypto';
 import Anthropic from '@anthropic-ai/sdk';
-import axios from 'axios';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../lib/errors';
+import { generateGeminiText, type GeminiPart } from '../../lib/gemini';
 import type { Circuit, Conversation, TutorEvidence, TutorMessage, TutorResponseMode } from '@qvanta/types';
 import { analyzeCircuit } from './circuit-tutor';
 import { getInstantTutorReply } from './instant-tutor';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() || undefined;
-const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-1.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-flash-latest';
 const geminiAvailable = Boolean(GEMINI_API_KEY);
 
 type StoredMessage = Omit<TutorMessage, 'circuitContext'> & {
@@ -234,10 +234,6 @@ async function buildClaudeReply(input: {
   return { content, ragContext };
 }
 
-interface GeminiPart {
-  text?: string;
-}
-
 /**
  * Calls Google Gemini via the public Generative Language REST API. Uses the
  * same system prompt and RAG/circuit context as the Claude path so the two
@@ -305,20 +301,13 @@ async function buildGeminiReply(input: {
     };
   }
 
-  const res = await axios.post(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      contents: recent,
-      systemInstruction: { role: 'system', parts: [{ text: systemInstruction }] },
-      generationConfig: { maxOutputTokens: 768, temperature: 0.4 },
-    },
-    { timeout: 45_000, headers: { 'Content-Type': 'application/json' } }
-  );
-
-  const text = res.data?.candidates?.[0]?.content?.parts
-    ?.map((p: GeminiPart) => p.text ?? '')
-    .join('\n\n')
-    .trim();
+  const text = await generateGeminiText({
+    contents: recent,
+    systemInstruction,
+    maxOutputTokens: 768,
+    temperature: 0.4,
+    timeoutMs: 45_000,
+  });
 
   const content = text || buildCannedReply(input).content;
   const ragContext = input.lessonTitles.length ? input.lessonTitles : ['general-quantum-pedagogy'];

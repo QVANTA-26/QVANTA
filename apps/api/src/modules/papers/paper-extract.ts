@@ -1,5 +1,4 @@
 import Anthropic from '@anthropic-ai/sdk';
-import axios from 'axios';
 import {
   GATE_IDS,
   getGateTargetCount,
@@ -11,6 +10,7 @@ import {
   type PaperCircuit,
 } from '@qvanta/types';
 import { AppError } from '../../lib/errors';
+import { generateGeminiText } from '../../lib/gemini';
 import type { PaperSource } from './paper-source';
 
 /** Builder and simulator both cap here, so extracted circuits must fit too. */
@@ -31,7 +31,6 @@ if (process.env.ANTHROPIC_API_KEY) {
 }
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() || undefined;
-const GEMINI_PAPER_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-1.5-flash';
 const geminiAvailable = Boolean(GEMINI_API_KEY);
 
 const GATE_LIST = GATE_IDS.join(', ');
@@ -251,18 +250,12 @@ async function extractWithGemini(source: PaperSource): Promise<PaperAnalysis> {
 
   let text: string;
   try {
-    const res = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_PAPER_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        contents: [{ role: 'user', parts }],
-        generationConfig: { maxOutputTokens: 4096, temperature: 0.2 },
-      },
-      { timeout: 120_000, headers: { 'Content-Type': 'application/json' } }
-    );
-    text = res.data?.candidates?.[0]?.content?.parts
-      ?.map((p: { text?: string }) => p.text ?? '')
-      .join('\n')
-      .trim();
+    text = await generateGeminiText({
+      contents: [{ role: 'user', parts }],
+      maxOutputTokens: 4096,
+      temperature: 0.2,
+      timeoutMs: 120_000,
+    });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     throw new AppError(
