@@ -20,8 +20,8 @@ function assert(condition, message) {
 const packageJson = readJson('package.json');
 const lockfile = readJson('package-lock.json');
 
-assert(Number(process.versions.node.split('.')[0]) >= 20, 'Node.js 20 or newer is required');
-assert(readText('.nvmrc').trim() === '20', '.nvmrc must pin Node.js 20');
+assert(Number(process.versions.node.split('.')[0]) >= 22, 'Node.js 22 or newer is required');
+assert(readText('.nvmrc').trim() === '22', '.nvmrc must pin Node.js 22');
 assert(lockfile.lockfileVersion === 3, 'package-lock.json must use lockfileVersion 3');
 assert(packageJson.private === true, 'the workspace root must remain private');
 assert(Array.isArray(packageJson.workspaces), 'the workspace root must declare npm workspaces');

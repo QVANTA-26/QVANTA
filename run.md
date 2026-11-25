@@ -7,7 +7,7 @@ Run every command from the repository root unless a step says otherwise.
 Prerequisites:
 
 - Docker Desktop with Docker Compose
-- Node.js 20+
+- Node.js 22+
 - npm 9+
 - Python 3.11+ (only for local simulator development)
 

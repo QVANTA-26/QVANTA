@@ -21,7 +21,7 @@ const registrationStartSchema = z.object({
 
 const ceremonySchema = z.object({
   challengeToken: z.string().trim().min(1),
-  response: z.record(z.unknown()),
+  response: z.record(z.string(), z.unknown()),
 });
 
 webauthnRouter.post('/register/options', async (req, res, next) => {

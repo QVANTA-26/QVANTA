@@ -12,7 +12,7 @@
 
 <br/>
 
-<img src="https://img.shields.io/badge/NODE-20-e11d48?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=0d1117" alt="Node 20"/>
+<img src="https://img.shields.io/badge/NODE-22-e11d48?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=0d1117" alt="Node 22"/>
 <img src="https://img.shields.io/badge/REACT-VITE-e11d48?style=flat-square&logo=react&logoColor=white&labelColor=0d1117" alt="React Vite"/>
 <img src="https://img.shields.io/badge/R3F-3D_BUILDER-e11d48?style=flat-square&logo=threedotjs&logoColor=white&labelColor=0d1117" alt="React Three Fiber"/>
 <img src="https://img.shields.io/badge/PYTHON-3.11+-e11d48?style=flat-square&logo=python&logoColor=white&labelColor=0d1117" alt="Python 3.11+"/>
@@ -193,7 +193,7 @@ flowchart TD
 
 ### `01` &nbsp; Prerequisites
 
-Docker + Docker Compose, Node.js 20 (pinned in `.nvmrc`), Python 3.11+, npm.
+Docker + Docker Compose, Node.js 22 (pinned in `.nvmrc`), Python 3.11+, npm.
 
 ### `02` &nbsp; Start infrastructure
 

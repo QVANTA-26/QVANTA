@@ -25,7 +25,7 @@ new backend endpoints, storage, integrations, or product screens.
 
 | Area | Requirement | Evidence |
 | --- | --- | --- |
-| Reproducibility | Use Node.js 20 and the checked-in npm lockfile for JavaScript dependencies. | `.nvmrc`, `npm ci`, `npm test` |
+| Reproducibility | Use Node.js 22 and the checked-in npm lockfile for JavaScript dependencies. | `.nvmrc`, `npm ci`, `npm test` |
 | Build integrity | Workspace typechecks and production builds must pass before merge. | `npm run typecheck`, `npm run build` |
 | Container integrity | The production web Dockerfile must build from the repository root. | `npm run docker:check` |
 | Offline verification | Repository metadata verification must not need a network connection or application services. | `npm test` |

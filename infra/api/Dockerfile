@@ -4,7 +4,7 @@
 # build: install the npm workspace, generate the Prisma client, compile the
 # shared @qvanta/types package (the API requires it at runtime) and the API.
 # ---------------------------------------------------------------------------
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ RUN npm --workspace api run build
 # ---------------------------------------------------------------------------
 # runtime: production image with the compiled server only.
 # ---------------------------------------------------------------------------
-FROM node:20-alpine AS runtime
+FROM node:22-alpine AS runtime
 
 WORKDIR /app
 ENV NODE_ENV=production

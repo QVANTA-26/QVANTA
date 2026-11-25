@@ -2,13 +2,16 @@
   "name": "qvanta",
   "private": true,
   "engines": {
-    "node": ">=20",
+    "node": ">=22",
     "npm": ">=9"
   },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
+  "overrides": {
+    "qs": "^6.17.1"
+  },
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",
     "test": "npm run prisma:generate && node scripts/verify-repo.mjs && node scripts/generate-curriculum.mjs --verify && npm run test --workspaces --if-present",

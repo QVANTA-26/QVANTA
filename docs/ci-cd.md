@@ -5,7 +5,7 @@
 `.github/workflows/ci.yml` runs for pull requests and pushes to `main`:
 
 1. Checkout the repository.
-2. Select Node.js 20 from `.nvmrc`.
+2. Select Node.js 22 from `.nvmrc`.
 3. Run `npm ci --no-audit --no-fund` from the root. `npm ci` is required so the
    checked-in `package-lock.json` is the install contract.
 4. Run `npm test` for the dependency-free repository verification.

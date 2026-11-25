@@ -7,7 +7,7 @@ which runtime boundary they affect.
 ## Before opening a change
 
 1. Read the relevant repository and product documentation in `docs/`.
-2. Use Node.js 20 from `.nvmrc` and install from `package-lock.json` with `npm ci`.
+2. Use Node.js 22 from `.nvmrc` and install from `package-lock.json` with `npm ci`.
 3. Keep secrets in local `.env` files; commit only `.env.example` templates.
 4. Preserve existing local/demo fallbacks unless the change intentionally removes one.
 
